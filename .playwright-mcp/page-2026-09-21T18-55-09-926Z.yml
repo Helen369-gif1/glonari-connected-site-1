@@ -1,0 +1,39 @@
+- generic [active] [ref=f8e1]:
+  - generic [ref=f8e3]:
+    - img "Glonari" [ref=f8e6]
+    - generic [ref=f8e7]:
+      - heading "More than a place to live — a smarter path to ownership" [level=1] [ref=f8e8]
+      - paragraph [ref=f8e9]: Glonari brings real estate, member participation, artificial intelligence, global connections, and financial intelligence together to help lower your cost of living and make ownership more achievable. Gia quietly connects it all.
+    - button "explore" [ref=f8e42] [cursor=pointer]
+  - main "Glonari Global — mobile scene" [ref=f8e10]:
+    - generic [ref=f8e13]:
+      - button "Previous building" [ref=f8e14] [cursor=pointer]: ‹
+      - generic [ref=f8e16]:
+        - generic [aria-hidden] [ref=f8e17] [cursor=pointer]
+        - button "Signature Persona Pavilion — open section" [ref=f8e18] [cursor=pointer]:
+          - img "Signature Persona Pavilion building" [ref=f8e19]
+        - button "Digital Banker — open section" [ref=f8e20] [cursor=pointer]:
+          - img "Digital Banker building" [ref=f8e21]
+        - button "Global Connections — open section" [ref=f8e22] [cursor=pointer]:
+          - img "Global Connections building" [ref=f8e23]
+        - button "Global Dream — open section" [ref=f8e24] [cursor=pointer]:
+          - img "Global Dream building" [ref=f8e25]
+        - button "Glonari Ancillary — open section" [ref=f8e26] [cursor=pointer]:
+          - img "Glonari Ancillary building" [ref=f8e27]
+        - button "Glonari News — open section" [ref=f8e28] [cursor=pointer]:
+          - img "Glonari News building" [ref=f8e29]
+        - button "Glonari Pulse — open section" [ref=f8e30] [cursor=pointer]:
+          - img "Glonari Pulse building" [ref=f8e31]
+        - generic [aria-hidden] [ref=f8e32] [cursor=pointer]
+      - button "Next building" [ref=f8e33] [cursor=pointer]: ›
+    - generic [ref=f8e34]:
+      - button "Signature Persona Pavilion" [ref=f8e35] [cursor=pointer]
+      - button "Digital Banker" [ref=f8e36] [cursor=pointer]
+      - button "Global Connections" [ref=f8e37] [cursor=pointer]
+      - button "Global Dream" [ref=f8e38] [cursor=pointer]
+      - button "Glonari Ancillary" [ref=f8e39] [cursor=pointer]
+      - button "Glonari News" [ref=f8e40] [cursor=pointer]
+      - button "Glonari Pulse" [ref=f8e41] [cursor=pointer]
+    - generic:
+      - generic:
+        - img "Glonari globe fountain"

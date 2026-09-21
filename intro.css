@@ -1,39 +1,51 @@
 /* ---------- Branded intro overlay (shared: desktop index.html + mobile/index.html) ----------
    Full-screen entrance shown above the Campus scene while it finishes
-   loading. Self-contained: defines its own --gold-bright like
-   section-modal.css already does, rather than relying on the host page's
-   design-tokens.css :root, so this file keeps working even on a page that
-   doesn't link that file.
+   loading. Self-contained: defines its own --gold-bright/--gold-bright-rgb
+   like section-modal.css already does, rather than relying on the host
+   page's design-tokens.css :root, so this file keeps working even on a
+   page that doesn't link that file.
 
    Whether the overlay is shown at all is decided per-page, synchronously,
    by a tiny inline script in each host page's own <head> (see index.html /
    mobile/index.html) — it adds `intro-active` to <html> before this
    stylesheet ever has a chance to paint anything, present on a normal
    load/reload and absent when the page was reached via an automatic live
-   device-gate redirect. See intro.js for the show/hold/exit timing that
-   runs once `intro-active` is present.
+   device-gate redirect. See intro.js for the reveal choreography (built on
+   GSAP) and the click/keyboard-gated exit that runs once `intro-active` is
+   present.
 
-   Colors: #0b1e3a is this project's existing deep navy (see styles.css
-   html/body + .stage-viewport); --gold-bright matches the same gold
-   already used by the custom cursor, building hover glow, and the section
-   modal. Nothing new introduced here. */
+   v2 (2026-09-21): replaced the original CSS-only "gold circle + WELCOME
+   TO / GLONARI" mark with the real Glonari logo, a headline/subhead pair,
+   and an explicit "explore" button the visitor must activate — no more
+   automatic readiness-driven exit. See intro.js for why. Colors are
+   unchanged from v1: #0b1e3a is this project's existing deep navy (see
+   styles.css html/body + .stage-viewport); --gold-bright matches the same
+   gold already used by the custom cursor, building hover glow, and the
+   section modal. */
 
 #intro-overlay {
   --gold-bright: #ffe9b8;
+  --gold-bright-rgb: 255, 233, 184;
 
   display: none;
   position: fixed;
   inset: 0;
   z-index: 10000;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(20px, 4vh, 32px);
   background: #0b1e3a;
   opacity: 1;
+  /* Native cursor is restored here on purpose: styles.css turns it off
+     globally (`html, body { cursor: none }`) on fine-pointer devices and
+     relies on .cursor-dot/.cursor-ring (z-index 9998/9999) to stand in for
+     it — but this overlay's own z-index (10000) sits above both, so
+     without this override a visitor would see no cursor at all while
+     staring at a button they're expected to click. */
+  cursor: default;
   /* 1.6s, ease-in-out — the synchronized final fade of the whole overlay
-     (globe + text together, no staggering, no separate enlarge beat) —
-     see intro.js beginExit() for exactly when this fires in the timeline. */
+     (logo + copy + button together, no staggering) — see intro.js
+     beginExit() for exactly when this fires: only after the "explore"
+     button is clicked/activated, never on a timer. */
   transition: opacity 1.6s ease-in-out;
 }
 
@@ -53,107 +65,133 @@ html.intro-active #intro-overlay {
   pointer-events: none;
 }
 
-/* Continent mark: a genuine traced outline (not a freehand approximation)
-   of the gold continent silhouette already visible on the project's own
-   globe-fountain asset (assets/fountain.png / mobile's shared copy of the
-   same file) — the bronze "GLONARI" globe monument already in the Campus
-   scene. Traced via a color-threshold + contour extraction pass over that
-   PNG (gold continent pixels vs. the dark sphere), simplified, and
-   normalized into this 0-100 viewBox centered and sized to ~78% of the
-   frame. Both North America and South America are visible on that asset,
-   joined by the Central American isthmus, so both are traced here as the
-   one connected shape that they actually are on the globe — not a
-   simplified/invented blob. Encoded inline as an SVG background-image
-   (stroke only, no fill) rather than as HTML markup so this stays fully
-   self-contained in this one file, matching this file's own "no host-page
-   changes needed" design. Two stroke-widths: a relatively heavier one at
-   the base (mobile) size so the outline doesn't thin into an illegible
-   smudge at ~120px, and a lighter, more delicate one at the larger desktop
-   size (768px override below) where the extra rendered pixels already
-   carry the detail. */
-.intro-circle {
-  width: clamp(110px, 30vw, 130px);
-  height: clamp(110px, 30vw, 130px);
-  border-radius: 50%;
-  border: 1px solid var(--gold-bright);
-  box-shadow: 0 0 24px rgba(255, 233, 184, 0.12);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M 37.73,12.12 L 35.58,14.73 L 31.95,15.11 L 24.39,20.05 L 29.43,18.65 L 32.04,20.05 L 25.79,31.90 L 25.79,38.90 L 27.47,41.04 L 29.71,39.92 L 31.57,44.31 L 41.09,46.73 L 43.80,50.93 L 47.15,51.59 L 44.36,60.17 L 47.43,65.39 L 51.82,68.75 L 50.33,85.27 L 52.85,89.00 L 57.23,88.35 L 55.92,87.32 L 56.95,83.22 L 59.28,80.51 L 61.24,80.42 L 62.46,77.90 L 64.97,78.08 L 66.09,73.33 L 71.51,69.69 L 71.97,65.95 L 75.42,62.04 L 75.61,59.80 L 71.23,56.72 L 65.81,55.41 L 64.14,51.77 L 60.78,51.03 L 57.42,47.01 L 56.02,48.32 L 50.70,47.48 L 48.27,50.09 L 45.10,50.19 L 44.45,45.33 L 43.24,45.06 L 42.40,46.83 L 41.65,45.06 L 42.58,41.42 L 41.28,41.32 L 40.62,43.66 L 36.42,42.72 L 37.45,37.12 L 40.53,37.12 L 41.93,35.44 L 44.82,35.72 L 46.97,38.80 L 46.87,34.98 L 50.05,33.39 L 54.25,27.33 L 63.11,26.11 L 61.24,22.57 L 56.86,19.12 L 58.35,16.13 L 53.31,13.24 L 57.23,13.43 L 63.02,19.58 L 64.97,14.08 L 54.71,11.00 L 49.86,12.49 L 43.89,12.21 L 42.68,13.99 Z' fill='none' stroke='%23ffe9b8' stroke-width='2.6' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 78% 78%;
+.intro-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: clamp(18px, 3.4vh, 28px);
+  width: min(560px, 86vw);
+  padding: 0 16px;
+}
+
+.intro-logo {
+  width: clamp(160px, 40vw, 240px);
   opacity: 0;
-  transform: scale(0.94);
-  /* 2.4s, ease-in-out (not the default `ease`): symmetric slow-in/slow-out
-     reads as noticeably smoother/more deliberate than `ease`'s fast-start
-     for a transition this long — see intro.js for the exact choreographed
-     timeline (globe/text/hold/exit) this duration is one fixed step of. */
-  transition: opacity 2.4s ease-in-out, transform 2.4s ease-in-out;
+}
+
+.intro-logo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.intro-copy {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 2vh, 16px);
+  opacity: 0;
+}
+
+.intro-headline {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-weight: 400;
+  font-size: clamp(20px, 5.6vw, 30px);
+  line-height: 1.28;
+  letter-spacing: 0.01em;
+  color: rgba(253, 246, 230, 0.96);
+  margin: 0;
+}
+
+.intro-subhead {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(12.5px, 3.1vw, 14px);
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: rgba(253, 246, 230, 0.62);
+  margin: 0 auto;
+  max-width: 46ch;
+}
+
+.intro-cta {
+  all: unset;
+  cursor: pointer;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(11px, 2.8vw, 12.5px);
+  letter-spacing: 0.14em;
+  color: var(--gold-bright);
+  background: transparent;
+  border: 1px solid var(--gold-bright);
+  border-radius: 999px;
+  padding: clamp(11px, 2.6vw, 13px) clamp(30px, 7vw, 40px);
+  opacity: 0;
+  visibility: hidden;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.intro-cta:hover {
+  background: rgba(var(--gold-bright-rgb), 0.14);
+  box-shadow: 0 0 26px rgba(var(--gold-bright-rgb), 0.35);
+}
+
+.intro-cta:active {
+  transform: scale(0.97);
+}
+
+.intro-cta:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 3px;
 }
 
 /* 768px mirrors this project's own established desktop/mobile breakpoint
    (see the device-gate scripts' 767/768 split in both index.html files). */
 @media (min-width: 768px) {
-  .intro-circle {
-    width: clamp(150px, 14vw, 180px);
-    height: clamp(150px, 14vw, 180px);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M 37.73,12.12 L 35.58,14.73 L 31.95,15.11 L 24.39,20.05 L 29.43,18.65 L 32.04,20.05 L 25.79,31.90 L 25.79,38.90 L 27.47,41.04 L 29.71,39.92 L 31.57,44.31 L 41.09,46.73 L 43.80,50.93 L 47.15,51.59 L 44.36,60.17 L 47.43,65.39 L 51.82,68.75 L 50.33,85.27 L 52.85,89.00 L 57.23,88.35 L 55.92,87.32 L 56.95,83.22 L 59.28,80.51 L 61.24,80.42 L 62.46,77.90 L 64.97,78.08 L 66.09,73.33 L 71.51,69.69 L 71.97,65.95 L 75.42,62.04 L 75.61,59.80 L 71.23,56.72 L 65.81,55.41 L 64.14,51.77 L 60.78,51.03 L 57.42,47.01 L 56.02,48.32 L 50.70,47.48 L 48.27,50.09 L 45.10,50.19 L 44.45,45.33 L 43.24,45.06 L 42.40,46.83 L 41.65,45.06 L 42.58,41.42 L 41.28,41.32 L 40.62,43.66 L 36.42,42.72 L 37.45,37.12 L 40.53,37.12 L 41.93,35.44 L 44.82,35.72 L 46.97,38.80 L 46.87,34.98 L 50.05,33.39 L 54.25,27.33 L 63.11,26.11 L 61.24,22.57 L 56.86,19.12 L 58.35,16.13 L 53.31,13.24 L 57.23,13.43 L 63.02,19.58 L 64.97,14.08 L 54.71,11.00 L 49.86,12.49 L 43.89,12.21 L 42.68,13.99 Z' fill='none' stroke='%23ffe9b8' stroke-width='1.7' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E");
+  .intro-inner {
+    gap: clamp(22px, 3.6vh, 32px);
+  }
+
+  .intro-logo {
+    width: clamp(210px, 20vw, 300px);
+  }
+
+  .intro-headline {
+    font-size: clamp(28px, 3.4vw, 42px);
+  }
+
+  .intro-subhead {
+    font-size: clamp(13.5px, 1.35vw, 16px);
+    max-width: 52ch;
+  }
+
+  .intro-cta {
+    font-size: 12.5px;
+    padding: 14px 42px;
   }
 }
 
-.intro-circle.is-in {
+/* No-GSAP fallback: intro.js adds this class on #intro-overlay only if
+   `gsap` never becomes available (e.g. the CDN request is blocked) —
+   without it, the logo/copy/button above would stay at their CSS-default
+   opacity:0/visibility:hidden forever, since nothing but the GSAP timeline
+   normally clears those. Reveals everything via a plain CSS transition
+   instead, so a blocked CDN degrades to "less fancy" rather than "stuck
+   with an unusable dark screen and no way to reach the Campus". */
+.intro-overlay-fallback .intro-logo,
+.intro-overlay-fallback .intro-copy {
+  transition: opacity 0.6s ease;
   opacity: 1;
-  transform: scale(1);
 }
 
-.intro-text {
-  text-align: center;
-  opacity: 0;
-  transform: translateY(6px);
-  /* 2s, ease-in-out — see intro.js: this class is added at ~2.2s into the
-     timeline, a deliberate slight overlap with the globe's own 2.4s
-     transition rather than waiting for it to fully finish first. */
-  transition: opacity 2s ease-in-out, transform 2s ease-in-out;
-}
-
-.intro-text.is-in {
+.intro-overlay-fallback .intro-cta {
+  transition: opacity 0.6s ease;
   opacity: 1;
-  transform: translateY(0);
+  visibility: visible;
 }
 
-.intro-welcome {
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: rgba(253, 246, 230, 0.72);
-  margin: 0 0 8px;
-}
-
-.intro-brand {
-  font-family: 'Georgia', 'Times New Roman', serif;
-  font-weight: 400;
-  font-size: clamp(22px, 5vw, 32px);
-  letter-spacing: 0.12em;
-  color: var(--gold-bright);
-  margin: 0;
-}
-
-/* Reduced motion: the JS-driven schedule (globe fade-in at 0s, text
-   fade-in at ~2.2s, hold, then the synchronized exit fade — see intro.js)
-   plays at the exact same wall-clock times for every user; only the CSS
-   motion itself is reduced here, to a quick plain opacity fade with no
-   scale-in (there's no rotation or exit-enlarge left to strip — both were
-   removed outright, for every user). The practical effect is the same
-   four steps in the same order, just settling almost immediately into
-   each held state instead of drifting into it over 2-2.4s. */
 @media (prefers-reduced-motion: reduce) {
-  .intro-circle {
-    transform: none !important;
-    transition: opacity 0.5s ease !important;
-  }
-
-  .intro-text {
-    transform: none !important;
-    transition: opacity 0.5s ease !important;
+  .intro-overlay-fallback .intro-logo,
+  .intro-overlay-fallback .intro-copy,
+  .intro-overlay-fallback .intro-cta {
+    transition: none;
   }
 }

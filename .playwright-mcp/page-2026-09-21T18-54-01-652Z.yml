@@ -1,0 +1,40 @@
+- generic [active] [ref=f6e1]:
+  - generic [ref=f6e3]:
+    - img "Glonari" [ref=f6e6]
+    - generic [ref=f6e7]:
+      - heading "More than a place to live — a smarter path to ownership" [level=1] [ref=f6e8]
+      - paragraph [ref=f6e9]: Glonari brings real estate, member participation, artificial intelligence, global connections, and financial intelligence together to help lower your cost of living and make ownership more achievable. Gia quietly connects it all.
+  - generic [ref=f6e12]:
+    - button "Global Connections — open section" [ref=f6e14]:
+      - generic [ref=f6e15]:
+        - generic:
+          - img "Global Connections building"
+    - button "Glonari News — open section" [ref=f6e16]:
+      - generic [ref=f6e17]:
+        - generic:
+          - img "Glonari News building"
+    - button "Glonari Pulse — open section" [ref=f6e18]:
+      - generic [ref=f6e19]:
+        - generic:
+          - img "Glonari Pulse building"
+    - button "Signature Persona Pavilion — open section" [ref=f6e20]:
+      - generic [ref=f6e21]:
+        - generic:
+          - img "Signature Persona Pavilion building"
+    - button "Digital Banker — open section" [ref=f6e22]:
+      - generic [ref=f6e23]:
+        - generic:
+          - img "Digital Banker building"
+    - button "Global Dream — open section" [ref=f6e24]:
+      - generic [ref=f6e25]:
+        - generic:
+          - img "Global Dream building"
+    - button "Glonari Ancillary — open section" [ref=f6e26]:
+      - generic [ref=f6e27]:
+        - generic:
+          - img "Glonari Ancillary building"
+    - generic [ref=f6e28]:
+      - generic:
+        - img "Plaza with Glonari globe fountain"
+  - generic [aria-hidden]:
+    - generic: Explore

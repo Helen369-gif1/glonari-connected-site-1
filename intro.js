@@ -17,79 +17,30 @@
   if (!root.classList.contains('intro-active')) return;
 
   const overlay = document.getElementById('intro-overlay');
-  const circle = document.getElementById('intro-circle');
-  const text = document.getElementById('intro-text');
   if (!overlay) return;
 
-  // Fixed choreography, in ms — see intro.css for the matching CSS
-  // transition durations/easing each step drives. This is now a
-  // deliberately slow, scripted sequence (not "however long it takes to
-  // settle"), so every stage's wall-clock length is named here instead of
-  // left as a magic number inside MIN_DISPLAY_MS's own math below:
-  //   1. Globe fades/scales in over GLOBE_FADE_MS, starting at t=0.
-  //   2. Text starts fading in at TEXT_START_MS (a deliberate ~200ms
-  //      overlap with the globe's own transition, not a hard sequential
-  //      wait), taking TEXT_FADE_MS to finish.
-  //   3. Once both are visually settled, hold with no visual change for
-  //      HOLD_MS.
-  //   4. Exit: fade the whole overlay (globe + text together, one
-  //      opacity transition on #intro-overlay — see intro.css) out over
-  //      EXIT_FADE_MS.
-  const GLOBE_FADE_MS = 2400;
-  const TEXT_START_MS = 2200;
-  const TEXT_FADE_MS = 2000;
-  const HOLD_MS = 2000;
-  const EXIT_FADE_MS = 1600;
+  const logo = document.getElementById('intro-logo');
+  const copy = document.getElementById('intro-copy');
+  const cta = document.getElementById('intro-cta');
 
-  // Minimum time the composition stays visible before exit is even
-  // eligible to begin — steps 1-3 above, back to back: both the globe and
-  // the text must be fully settled (whichever of the two finishes later),
-  // then the fixed hold on top of that. With the values above:
-  //   settled = max(GLOBE_FADE_MS, TEXT_START_MS + TEXT_FADE_MS)
-  //           = max(2400, 2200 + 2000) = max(2400, 4200) = 4200
-  //   MIN_DISPLAY_MS = settled + HOLD_MS = 4200 + 2000 = 6200
-  // This intentionally no longer means "at least this long, cut short if
-  // the Campus is ready sooner" the way the old, much shorter value did —
-  // steps 1-3 are a fixed choreography that plays in full every time.
-  const MIN_DISPLAY_MS = Math.max(GLOBE_FADE_MS, TEXT_START_MS + TEXT_FADE_MS) + HOLD_MS;
-
-  // Hard ceiling so the intro can never sit indefinitely waiting on a
-  // readiness signal that never fires — a genuine fallback, not the
-  // expected exit path. Set comfortably (1800ms) above MIN_DISPLAY_MS
-  // rather than the old fixed 3.5s, which would now be LOWER than the
-  // choreography's own minimum and would cut it off mid-hold (or worse,
-  // mid-text-fade-in) on every single load: MIN_DISPLAY_MS (6200) + 1800
-  // = 8000. On the normal path (Campus ready by 6200ms), total time from
-  // load to fully-removed overlay is MIN_DISPLAY_MS + EXIT_FADE_MS = 6200
-  // + 1600 = 7800ms (~7.8s) — the four-step choreography above, in full,
-  // never visually truncated.
-  const HARD_CEILING_MS = MIN_DISPLAY_MS + 1800;
-
-  // Readiness signal: neither main.js exposes a custom "ready"/"assets
-  // loaded" event, so the most reliable existing signal without
-  // restructuring either app is the page's own `load` event — it only
-  // fires once every eager-loaded image (sky/plaza/buildings on desktop,
-  // sky/ground/fountain/eager carousel frames on mobile) has actually
-  // finished, and does NOT wait on the `loading="lazy"` mobile frames
-  // that aren't visible yet.
+  // v2 (2026-09-21): the old choreography auto-exited once a fixed hold
+  // had played AND the Campus's own `load` event had fired (see this
+  // file's pre-2026-09-21 history for that arithmetic). That is gone now —
+  // the reveal (logo → copy → button, via the GSAP timeline below) is the
+  // *entire* automatic part. Once the button is visible, nothing further
+  // happens on its own; the visitor has to click it (or activate it with
+  // Enter/Space while it's focused, which a native <button> already does
+  // without any extra code here) to call beginExit() below.
+  const EXIT_FADE_MS = 1600; // matches #intro-overlay's opacity transition in intro.css
 
   let exited = false;
-  let minDisplayDone = false;
-  let readyDone = false;
-
-  function tryExit() {
-    if (exited || !minDisplayDone || !readyDone) return;
-    beginExit();
-  }
 
   function beginExit() {
     if (exited) return;
     exited = true;
 
-    // Step 4: no separate "mark enlarges" beat — once the hold ends, the
-    // whole overlay (globe + text, already at their settled resting
-    // state) fades to transparent together via the existing `.intro-exit`
-    // opacity transition (EXIT_FADE_MS, see intro.css).
+    if (typeof gsap !== 'undefined') gsap.killTweensOf([logo, copy, cta]);
+
     overlay.classList.add('intro-exit');
 
     // Once that fade transition has actually completed, fully disable the
@@ -102,42 +53,68 @@
     }, EXIT_FADE_MS);
   }
 
-  // Step 1: fade the globe in with its subtle scale-in settle (no
-  // rotation — dropped from the animation entirely, see intro.css; reduced
-  // motion drops the scale-in too, leaving a plain fade, but the timing
-  // below fires at the exact same wall-clock times either way).
-  requestAnimationFrame(() => {
-    if (circle) circle.classList.add('is-in');
-  });
-
-  // Step 2: welcome/brand text starts fading in at TEXT_START_MS — a
-  // deliberate slight overlap with the globe's still-finishing transition
-  // (GLOBE_FADE_MS), not a hard sequential wait for it.
-  window.setTimeout(() => {
-    if (text) text.classList.add('is-in');
-  }, TEXT_START_MS);
-
-  // Step 3 (fixed hold, see MIN_DISPLAY_MS's own comment above for the
-  // arithmetic): exit becomes eligible only once BOTH this fixed
-  // choreography and Campus readiness have completed — whichever finishes
-  // last decides when, via tryExit() below — bounded by the hard ceiling.
-  window.setTimeout(() => {
-    minDisplayDone = true;
-    tryExit();
-  }, MIN_DISPLAY_MS);
-
-  if (document.readyState === 'complete') {
-    readyDone = true;
-  } else {
-    window.addEventListener(
-      'load',
-      () => {
-        readyDone = true;
-        tryExit();
-      },
-      { once: true }
-    );
+  if (cta) {
+    cta.addEventListener('click', beginExit);
   }
 
+  // Hard, last-resort failsafe: if something breaks — a rendering bug
+  // hides the button, a future edit forgets to wire its click, etc. — the
+  // visitor must still, eventually, reach the Campus underneath rather
+  // than being stuck on a dark screen forever. Deliberately very far out
+  // (60s) so it can never be confused with, or cut into, the ~1.5s reveal
+  // or a visitor genuinely taking their time reading the copy before
+  // clicking "explore".
+  const HARD_CEILING_MS = 60000;
   window.setTimeout(beginExit, HARD_CEILING_MS);
+
+  if (!logo || !copy || !cta) return;
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (typeof gsap === 'undefined') {
+    // GSAP CDN request failed/blocked: fall back to the plain CSS
+    // transition defined in intro.css under .intro-overlay-fallback
+    // instead of leaving the logo/copy/button stuck at their CSS-default
+    // opacity:0 — a blocked CDN should degrade the reveal, not strand the
+    // visitor in front of an unusable screen with no visible "explore".
+    overlay.classList.add('intro-overlay-fallback');
+    return;
+  }
+
+  // Reveal choreography, built as one GSAP timeline (times below are
+  // seconds from timeline start, i.e. from page load):
+  //   1. Logo fades + scales in.
+  //   2. Copy (headline + subhead, as a single block — see note below)
+  //      starts fading/sliding in while the logo is still finishing, not
+  //      after it settles.
+  //   3. The "explore" button fades in last, again starting slightly
+  //      before the copy above has fully settled.
+  // Total time to a fully-settled button: 1.5s. Deliberately at the fast
+  // end of the ~1.5-2.5s the brief asked for, not the middle/slow end —
+  // the brief's own priority for this screen is "smooth but not slow
+  // enough to annoy", and 0.5-0.7s per step already reads as a soft,
+  // deliberate fade rather than a snap; stretching further would trade
+  // that priority away for a marginally more cinematic feel nobody asked
+  // for here.
+  //
+  // Headline and subhead are one animated unit (.intro-copy), not two
+  // staggered tweens — tried separately first; at this overall pace the
+  // gap between them read as a stutter rather than a considered beat, so
+  // they were folded into a single fade+rise on the shared wrapper. This
+  // is explicitly one of the two outcomes the brief allowed for.
+  const tl = gsap.timeline();
+
+  if (reducedMotion) {
+    // Same relative order (logo, then copy, then button), each starting
+    // before the previous one has fully settled, but as quick plain
+    // opacity fades with no scale/slide — motion is what's being reduced,
+    // not the sequence itself.
+    tl.to(logo, { opacity: 1, duration: 0.3, ease: 'none' }, 0)
+      .to(copy, { opacity: 1, duration: 0.3, ease: 'none' }, 0.15)
+      .to(cta, { opacity: 1, visibility: 'visible', duration: 0.3, ease: 'none' }, 0.3);
+  } else {
+    tl.fromTo(logo, { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.7, ease: 'power2.out' }, 0)
+      .fromTo(copy, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' }, 0.4)
+      .fromTo(cta, { opacity: 0 }, { opacity: 1, visibility: 'visible', duration: 0.5, ease: 'power1.out' }, 1.0);
+  }
 })();

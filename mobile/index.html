@@ -93,12 +93,22 @@
   <!-- Branded intro overlay: shared markup/behavior with desktop
        index.html — see intro.css/intro.js. Sits above the Campus (and its
        own #modal-overlay) while active; fully removed from the DOM on
-       exit. -->
-  <div id="intro-overlay" aria-hidden="true">
-    <div class="intro-circle" id="intro-circle"></div>
-    <div class="intro-text" id="intro-text">
-      <p class="intro-welcome">WELCOME TO</p>
-      <p class="intro-brand">GLONARI</p>
+       exit. Not aria-hidden: unlike the old auto-exiting version, this one
+       holds a real interactive control (the "explore" button) that
+       assistive tech must be able to reach. -->
+  <div id="intro-overlay">
+    <div class="intro-inner">
+      <div class="intro-logo" id="intro-logo">
+        <picture>
+          <source type="image/webp" srcset="../assets/glonari-logo.webp">
+          <img src="../assets/glonari-logo.png" alt="Glonari" width="1584" height="763">
+        </picture>
+      </div>
+      <div class="intro-copy" id="intro-copy">
+        <h1 class="intro-headline">More than a place to live — a smarter path to ownership</h1>
+        <p class="intro-subhead">Glonari brings real estate, member participation, artificial intelligence, global connections, and financial intelligence together to help lower your cost of living and make ownership more achievable. Gia quietly connects it all.</p>
+      </div>
+      <button type="button" class="intro-cta" id="intro-cta">explore</button>
     </div>
   </div>
 
@@ -291,6 +301,11 @@
     </div>
   </div>
 
+  <!-- Same GSAP build/version as digital-banker/lobby/index.html, for one
+       version in use across the project. `defer`, placed immediately
+       before intro.js (also `defer`): deferred scripts run in document
+       order, so `gsap` is guaranteed defined by the time intro.js runs. -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js" defer></script>
   <script src="../intro.js" defer></script>
   <script src="../section-modal.js" defer></script>
   <script src="main.js" defer></script>
