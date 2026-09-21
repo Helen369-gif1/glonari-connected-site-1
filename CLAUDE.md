@@ -39,6 +39,15 @@ After EVERY completed task that changes, **on desktop or on mobile**:
    logic: don't delete, mark SUPERSEDED with a date and a short explanation
    of what replaced the old decision.
 
+## Reporting on completed work
+
+Do not publish a separate Artifact (HTML page or otherwise) for a
+status/QA/test report on this project unless explicitly asked for one.
+Report back in plain chat text instead. If screenshots are genuinely
+useful to show something visually, attach them as plain image files
+(e.g. saved to the scratchpad or referenced by path), not as a hosted
+report page.
+
 ## Definition of done
 
 A task that changes previously-documented behavior is not done if the code
