@@ -273,17 +273,34 @@ body{
   </div>
 </main>
 
-<!-- Cross-project exit transition: fades to the page's own --bg right
-     before handing off to digital-banker/lobby/ (the arches hall) once the
-     visitor has scrolled all the way through block 4's hold and paused
-     there for a beat. See ADVANCE_DELAY_MS / scheduleAdvance() below. -->
-<div id="exit-transition" aria-hidden="true"></div>
+<!-- Golden light flash before handing off to digital-banker/lobby/ (the
+     arches hall), once the visitor has scrolled all the way through
+     block 4's hold and paused there for a beat — see ADVANCE_DELAY_MS /
+     scheduleAdvance() below. Mirrors the #light-flash technique already
+     used for the lobby -> Global Reserve hand-off (digital-banker/lobby/
+     index.html), adapted to this page's own dark palette: the flash's
+     bright core still reads as the lobby's own warm light (--accent,
+     "sampled from the lobby light" per the token comment above) breaking
+     through, but recedes to this page's own --bg at the edge instead of
+     Global Reserve's bronze, so it belongs to both the dark GIA scene and
+     the golden hall it opens onto. Replaces the former plain fade-to-black
+     #exit-transition, which had no way to hide the arches-hall scene's
+     own asset-loading time on anything short of a fast connection (see
+     PRODUCT_REQUIREMENTS.md/DEVELOPMENT_PLAN.md 2026-09-21 notes for the
+     measured numbers) — mirrored by #gia-entry-flash on the lobby side,
+     which stays lit there until that scene's own images are actually
+     ready, not just for a fixed beat. -->
+<div id="light-flash" aria-hidden="true"></div>
 <style>
-#exit-transition{
-  position:fixed; inset:0; background:var(--bg); opacity:0; pointer-events:none;
-  z-index:10000; transition:opacity .6s ease;
+#light-flash{
+  position:fixed; inset:0; z-index:10000; opacity:0; pointer-events:none;
+  background:radial-gradient(circle, #fff6e0 0%, var(--accent) 40%, var(--bg) 100%);
+  transition:opacity 170ms ease-out;
 }
-#exit-transition.active{ opacity:1; pointer-events:all; }
+#light-flash.active{ opacity:1; }
+@media (prefers-reduced-motion: reduce){
+  #light-flash{ transition:none; }
+}
 </style>
 
 <script>
@@ -316,7 +333,7 @@ body{
      the scroll (see readScroll below) so it can be read — this is that
      hold's natural exit. Once the visitor has scrolled all the way to the
      very bottom (p >= ADVANCE_AT) we wait ADVANCE_DELAY_MS (long enough to
-     read Block 4), then fade to var(--bg) and navigate to the arches-hall
+     read Block 4), then flash to light and navigate to the arches-hall
      screen. The delay is cancelled if they scroll back up before it
      fires, so a momentum overshoot at the bottom can't trigger it by
      accident. NEXT_SCREEN_URL is relative to this file, matching the
@@ -324,18 +341,19 @@ body{
   var NEXT_SCREEN_URL   = '../lobby/index.html';
   var ADVANCE_AT        = 0.999;
   var ADVANCE_DELAY_MS  = 1100;
-  var exitTransition    = document.getElementById('exit-transition');
+  var FLASH_IN_MS       = 170; // keep in sync with #light-flash's CSS transition-duration
+  var lightFlash        = document.getElementById('light-flash');
   var advanceTimer      = null;
   var navigating        = false;
 
   function goToNextScreen() {
     if (navigating) return;
     navigating = true;
-    if (exitTransition) {
-      exitTransition.classList.add('active');
+    if (lightFlash) {
+      lightFlash.classList.add('active');
       window.setTimeout(function () {
         window.location.href = NEXT_SCREEN_URL;
-      }, 650);
+      }, FLASH_IN_MS);
     } else {
       window.location.href = NEXT_SCREEN_URL;
     }
@@ -353,6 +371,58 @@ body{
     if (!advanceTimer) return;
     window.clearTimeout(advanceTimer);
     advanceTimer = null;
+  }
+
+  /* ---------------- lobby asset prefetch --------------------------
+     The arches-hall scene's own first-paint assets (layers/wall.png,
+     layers/subjects.png, layers/Gia.png, and the 6 cropped-new arch
+     images) are ~13MB combined, plus GSAP from the CDN — heavy enough
+     that on anything short of a fast connection, downloading them cold
+     AFTER handing off here takes far longer than this page's own exit
+     flash can cover (measured cold, no prefetch at all: ~32.5s at a
+     throttled 10 Mbps versus this hand-off's own ~1.3s hold+flash — see
+     PRODUCT_REQUIREMENTS.md/DEVELOPMENT_PLAN.md 2026-09-21 notes).
+     Firing these as <link rel=preload> once the visitor is p >=
+     LOBBY_PREFETCH_AT through the video spends the real seconds they
+     still spend scrolling/reading here as a head start. That head start
+     is real but not complete: measured in a genuinely clean browser
+     context (fresh profile, cleared cache, no reuse from earlier runs —
+     an initial same-session measurement that showed ~3s was an artifact
+     of cache reuse across repeated test runs, not a real number), the
+     full set still takes ~13.5s to finish downloading even with the
+     prefetch's head start, versus the ~10.85s a straight bandwidth
+     calculation predicts (13.5MB / 1.25MB/s) — so it does NOT guarantee
+     everything is cached by the time an average or fast scroller reaches
+     the bottom. LOBBY_PREFETCH_AT is set low (0.2, not 0.5) specifically
+     to bank as much of that gap as possible, but #gia-entry-flash on the
+     lobby side (see that file) is the actual guarantee: it holds until
+     the images are genuinely ready, however long that takes, rather than
+     assuming this prefetch alone closed the gap. */
+  var LOBBY_PREFETCH_AT = 0.2;
+  var lobbyPrefetched   = false;
+  var LOBBY_PREFETCH_ASSETS = [
+    { href: 'https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js', as: 'script' },
+    { href: '../lobby/layers/wall.png', as: 'image' },
+    { href: '../lobby/layers/subjects.png', as: 'image' },
+    { href: '../lobby/layers/Gia.png', as: 'image' },
+    { href: '../lobby/cropped-new/1.png', as: 'image' },
+    { href: '../lobby/cropped-new/2.png', as: 'image' },
+    { href: '../lobby/cropped-new/3.png', as: 'image' },
+    { href: '../lobby/cropped-new/4.png', as: 'image' },
+    { href: '../lobby/cropped-new/5.png', as: 'image' },
+    { href: '../lobby/cropped-new/6.png', as: 'image' }
+  ];
+
+  function prefetchLobbyAssets() {
+    if (lobbyPrefetched) return;
+    lobbyPrefetched = true;
+    LOBBY_PREFETCH_ASSETS.forEach(function (asset) {
+      var link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = asset.as;
+      link.href = asset.href;
+      document.head.appendChild(link);
+    });
   }
 
   /* Each crossfade straddles its boundary, so A is at 50% exactly where B is. */
@@ -421,6 +491,7 @@ body{
 
     if (p >= ADVANCE_AT) scheduleAdvance();
     else cancelAdvance();
+    if (p >= LOBBY_PREFETCH_AT) prefetchLobbyAssets();
   }
 
   /* ---------------- render loop -------------------------------- */

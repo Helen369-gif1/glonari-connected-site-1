@@ -4,6 +4,42 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Арки — matrix3d corner-pin (заголовок + арка = единый объект)</title>
+<!-- Golden entry flash from digital-banker/gia/index.html (#light-flash
+     there). Inline here, not a linked stylesheet or a JS-added class, so
+     the very first paint is already fully opaque — no flash-of-unstyled-
+     content gap while this scene's own heavy layer/arch images (see
+     PRODUCT_REQUIREMENTS.md/DEVELOPMENT_PLAN.md 2026-09-21 notes) are
+     still loading behind it. Same gradient as GIA's outgoing flash (same
+     hand-off, same color on both sides); separate id/element from
+     #light-flash further down, which is this page's OWN outgoing flash
+     toward Global Reserve — the two never run at the same time, but they
+     have different default states (this one starts opaque, that one
+     starts hidden), so they stay two elements rather than one with
+     branching states. -->
+<style>
+  #gia-entry-flash{
+    position:fixed;
+    inset:0;
+    z-index:2000;
+    opacity:1;
+    pointer-events:none;
+    background:radial-gradient(circle, #fff6e0 0%, #D8B26A 40%, #07090F 100%);
+  }
+  /* Applied only once the scene's images have taken longer than expected
+     to finish (see the control script near the end of body) — a slow,
+     deliberate breathing motion so an extended hold still reads as
+     "loading" rather than a frozen/stuck page. */
+  #gia-entry-flash.loading{
+    animation:gia-entry-flash-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes gia-entry-flash-pulse{
+    0%, 100%{ opacity:1; }
+    50%{ opacity:0.82; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    #gia-entry-flash.loading{ animation:none; }
+  }
+</style>
 <style>
   html,body{
     width:100%; height:100%; margin:0; padding:0; overflow:hidden;
@@ -242,9 +278,10 @@
   /* ---------- Global Reserve — Scene 0 (arrival) ----------
      Полноэкранный overlay поверх сцены (но ниже #modal-overlay), в
      который на пике phase 3 (см. JS) кросс-фейдит #gr-flight — засветка/
-     blur как раз маскируют стык со первым кадром зацикленного
-     видео-эмбиента (arrival-idle.mp4), без звука и без Джии (см. TODO в
-     разметке). */
+     blur как раз маскируют стык со статичным кадром (см. #gr-arrival-image
+     ниже) — это первый кадр главного видео сайта Global Reserve
+     (global-reserve/media/hero-vault.mp4, тот же кадр с дверями хранилища),
+     без звука и без Джии (см. TODO в разметке). */
   #gr-arrival{
     position:fixed;
     inset:0;
@@ -266,10 +303,26 @@
      кросс-фейда, дальше (например, exitGlobalReserve) снова работает
      обычный CSS-переход. */
   #gr-arrival.gr-instant{ transition:none; }
-  #gr-arrival-video{
+  #gr-arrival-image{
     position:absolute; inset:0;
     width:100%; height:100%;
     object-fit:cover;
+  }
+  /* Тот же rgba(0,0,0,0.24), что лежит поверх видео на Screen 1 Global
+     Reserve (global-reserve/css/screens.css, .video-container::after) —
+     без этого слоя картинка здесь была заметно светлее того же самого
+     кадра на входе в Global Reserve, и переход читался как скачок
+     яркости (подтверждено pixel-diff: без этого слоя канал-за-каналом
+     разница была ровно ~24% от значения пикселя, т.е. именно
+     неприменённая здесь затемняющая подложка). ::after у самого
+     #gr-arrival, а не у #gr-arrival-image, красится поверх картинки в
+     естественном порядке отрисовки (генерируемый контент идёт после
+     обычных детей) — отдельный div не нужен. */
+  #gr-arrival::after{
+    content:"";
+    position:absolute; inset:0;
+    background:rgba(0,0,0,0.24);
+    pointer-events:none;
   }
   @media (prefers-reduced-motion: reduce){
     #gr-arrival{ transition:opacity 0.3s ease, visibility 0s linear 0.3s; }
@@ -297,6 +350,41 @@
     #gr-dim{ transition:none; }
   }
 
+  /* ---------- Global Reserve — light-flash hand-off ----------
+     Финальный слой перед уходом со страницы, ВЫШЕ #modal-overlay (80) —
+     тёплая золотая вспышка, которая разгорается на пике устоявшегося
+     статичного кадра #gr-arrival и держится залитой на момент самой
+     смены документа (см. scheduleReserveRedirect в JS), чтобы неизбежная
+     доля секунды перезагрузки браузера произошла экраном, залитым
+     светом, а не голым кадром. Это сознательно художественное решение,
+     а не попытка добить точное совпадение кадра — то, что кадр лобби и
+     первый кадр Global Reserve не совпадают тон-в-тон (остаточная
+     разница яркости и мгновенное появление #site-header на стороне
+     Global Reserve), измерено и задокументировано через pixel-diff в
+     PRODUCT_REQUIREMENTS.md §14 (see 2026-09-21 notes) — вспышка
+     заменяет дальнейшую техническую подгонку кадров.
+     Цвет: тот же тёплый золотой, что и --gold-bright (#ffe9b8) в центре,
+     наружу — в --gr-bronze (#cd7f32, акцентный цвет самого Global
+     Reserve) — так вспышка визуально "принадлежит" обеим сторонам
+     перехода. Внешний стоп сделан НЕПРОЗРАЧНЫМ (не rgba(...,0), как в
+     наивном "свет гаснет к краям" градиенте) специально — иначе в углах
+     экрана сквозь прозрачные края вспышки всё ещё был бы виден шов,
+     который она должна прятать; полное перекрытие экрана в момент
+     opacity:1 — это и есть смысл этого слоя. */
+  #light-flash{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    opacity:0;
+    pointer-events:none;
+    background:radial-gradient(circle, #fff6e0 0%, #ffe9b8 40%, #cd7f32 100%);
+    transition:opacity 170ms ease-out;
+  }
+  #light-flash.active{ opacity:1; }
+  @media (prefers-reduced-motion: reduce){
+    #light-flash{ transition:none; }
+  }
+
   #guideSvg{ position:absolute; top:0; left:0; width:3688px; height:905px; pointer-events:none; display:none; }
   body.show-guides #guideSvg{ display:block; }
   #guideSvg polygon{ fill:rgba(0,201,122,.12); stroke:#00c97a; stroke-width:2.5; }
@@ -318,17 +406,6 @@
      cover-масштаб, translateX/rotateY parallax и не обрезается через
      overflow:hidden сцены. Оформление 1:1 адаптировано из
      Glonari-Global-Scene-v1/section-modal.css. */
-  /* ---------- Global Reserve — hand-off to the separate site ----------
-     Full-screen fade to the scene's own dark background, used only once,
-     right before leaving this page for good (../../global-reserve/). Sits
-     above #modal-overlay (80) since it's the very last thing shown here. */
-  #exit-transition{
-    position:fixed; inset:0; z-index:90;
-    background:#0a0a0a; opacity:0; pointer-events:none;
-    transition:opacity .6s ease;
-  }
-  #exit-transition.active{ opacity:1; pointer-events:all; }
-
   #modal-overlay{
     --gold-bright:#ffe9b8;
     --gold-bright-rgb:255,233,184;
@@ -455,6 +532,8 @@
 </head>
 <body>
 
+<div id="gia-entry-flash" aria-hidden="true"></div>
+
 <div class="viewport-outer">
   <div id="stage-holder">
     <div id="scene-parallax">
@@ -547,9 +626,7 @@
      вне трансформированной сцены. Показывается только через
      enterGlobalReserve() после клика по арке "Global Reserve" (arch-2). -->
 <div id="gr-arrival" aria-hidden="true">
-  <video id="gr-arrival-video" muted loop playsinline preload="auto">
-    <source src="scenes/global-reserve/arrival-idle.mp4" type="video/mp4">
-  </video>
+  <img id="gr-arrival-image" src="scenes/global-reserve/reserve-first-frame.jpg" alt="">
   <!-- TODO: Gia появляется начиная со Scene 1 (см. PDF-скрипт), в Scene 0
        сознательно отсутствует в этой версии -->
 </div>
@@ -557,11 +634,10 @@
 <!-- Общее притемнение сцены на время влёта в Global Reserve — см. #gr-dim в CSS. -->
 <div id="gr-dim" aria-hidden="true"></div>
 
-<!-- Hand-off to the separate Global Reserve site: faded in by
-     scheduleReserveRedirect() once the arrival loop has played for a
-     beat, immediately before the real navigation to
-     ../../global-reserve/index.html. See the Global Reserve JS block. -->
-<div id="exit-transition" aria-hidden="true"></div>
+<!-- Золотая вспышка перед уходом на Global Reserve — см. #light-flash в
+     CSS и scheduleReserveRedirect() в JS. Прямой потомок body, z-index
+     выше #modal-overlay, поэтому перекрывает вообще всё на странице. -->
+<div id="light-flash" aria-hidden="true"></div>
 
 <!-- Кастомный курсор: тоже прямой потомок body, вне трансформированной сцены. -->
 <div class="cursor-dot" aria-hidden="true"></div>
@@ -826,37 +902,60 @@
     // и вся их hover/parallax-логика не затрагиваются.
     const arch2 = document.getElementById('arch-2');
     const grOverlay = document.getElementById('gr-arrival');
-    const grVideo = document.getElementById('gr-arrival-video');
+    const grImage = document.getElementById('gr-arrival-image');
     let grActive = false; // отдельно от isOpen модалки — arch-2 не открывает #modal-overlay
 
     // ---------- Global Reserve — hand-off to the separate site ----------
     // Global-Reserve/ is its own independent multi-screen site (not part of
-    // this page), reached once the visitor has watched the arrival loop for
-    // a beat. RESERVE_HOLD_MS is how long arrival-idle.mp4 plays before we
-    // leave; grRedirectTimer is cancelled in exitGlobalReserve() so an
-    // Escape press during the loop cancels the trip instead of racing it.
+    // this page). An earlier pass tried to make the hand-off invisible by
+    // matching #gr-arrival-image's brightness to Global Reserve's Screen 1
+    // pixel-for-pixel (see PRODUCT_REQUIREMENTS.md §14's 2026-09-21
+    // pixel-diff notes) — that closed the big brightness gap, but a
+    // residual sub-pixel scaling seam and Global Reserve's #site-header
+    // appearing instantly are both structural: no amount of matching
+    // #gr-arrival-image any closer fixes them, because they come from two
+    // separate HTML documents painting independently. So instead of
+    // chasing an exact match further, #light-flash (see CSS) floods the
+    // whole screen in warm gold right as the actual page-to-page
+    // navigation happens — the one moment (a real document unload/reload,
+    // not something CSS/JS can smooth) that would otherwise expose
+    // whatever seam is left. RESERVE_HOLD_MS is unchanged (lets
+    // #gr-arrival's own crossfade settle first); FLASH_IN_MS is new — how
+    // long the flash takes to reach full opacity before
+    // window.location.href actually fires, so the browser's own document
+    // swap lands on a fully gold screen instead of a visible frame. Both
+    // timers are cancelled together in exitGlobalReserve() so Escape at
+    // any point — including mid-flash — stops the whole trip and fades
+    // the flash back out instead of racing it.
     const RESERVE_SITE_URL = '../../global-reserve/index.html';
-    const RESERVE_HOLD_MS = 1800;
-    const exitTransition = document.getElementById('exit-transition');
+    const RESERVE_HOLD_MS = 200;
+    const FLASH_IN_MS = 170; // keep in sync with #light-flash's CSS transition-duration
+    const lightFlash = document.getElementById('light-flash');
     let grRedirectTimer = null;
+    let grFlashTimer = null;
 
     function scheduleReserveRedirect() {
       if (grRedirectTimer) return;
       grRedirectTimer = window.setTimeout(() => {
         grRedirectTimer = null;
-        if (exitTransition) {
-          exitTransition.classList.add('active');
-          window.setTimeout(() => { window.location.href = RESERVE_SITE_URL; }, 650);
-        } else {
+        if (lightFlash) lightFlash.classList.add('active');
+        grFlashTimer = window.setTimeout(() => {
+          grFlashTimer = null;
           window.location.href = RESERVE_SITE_URL;
-        }
+        }, FLASH_IN_MS);
       }, RESERVE_HOLD_MS);
     }
 
     function cancelReserveRedirect() {
-      if (!grRedirectTimer) return;
-      window.clearTimeout(grRedirectTimer);
-      grRedirectTimer = null;
+      if (grRedirectTimer) {
+        window.clearTimeout(grRedirectTimer);
+        grRedirectTimer = null;
+      }
+      if (grFlashTimer) {
+        window.clearTimeout(grFlashTimer);
+        grFlashTimer = null;
+        if (lightFlash) lightFlash.classList.remove('active');
+      }
     }
 
     const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -924,12 +1023,12 @@
       if (event.target === overlay) closeModal();
     });
 
-    // ---------- Global Reserve — Scene 0: влёт через арку + видео-луп покоя ----------
+    // ---------- Global Reserve — Scene 0: влёт через арку + статичный кадр прибытия ----------
     // GSAP используется вместо ручного requestAnimationFrame специально
     // ради явного timeline из 3 последовательных фаз (см. ниже) — тайминг
     // и easing каждой фазы правится в одном месте, без ручного счёта кадров.
     function enterGlobalReserve(archEl) {
-      if (grActive || !grOverlay || !grVideo || typeof gsap === 'undefined') return;
+      if (grActive || !grOverlay || !grImage || typeof gsap === 'undefined') return;
       grActive = true;
       clearAllHover();
       // Гасим остальные арки/курсор (CSS, см. body.gr-entering выше).
@@ -970,12 +1069,11 @@
         archEl.classList.remove('gr-hide');
       };
 
-      // Cross-fade #gr-flight → <video>: включаем видео и мгновенно (без
-      // штатного 0.5s CSS-transition, см. .gr-instant) прогоняем его opacity
-      // 0→1 за duration секунд через GSAP, синхронно с гашением #gr-flight.
-      const startVideoCrossfade = (duration) => {
-        grVideo.currentTime = 0;
-        grVideo.play().catch(() => {}); // клик по арке уже был пользовательским жестом, autoplay не должен блокироваться
+      // Cross-fade #gr-flight → статичный кадр (#gr-arrival-image): мгновенно
+      // (без штатного 0.5s CSS-transition, см. .gr-instant) прогоняем opacity
+      // #gr-arrival 0→1 за duration секунд через GSAP, синхронно с гашением
+      // #gr-flight — картинке ничего запускать не нужно, она уже отрисована.
+      const startArrivalCrossfade = (duration) => {
         grOverlay.classList.add('active', 'gr-instant');
         gsap.set(grOverlay, { opacity: 0 });
         gsap.to(grOverlay, {
@@ -989,7 +1087,7 @@
             grOverlay.classList.add('video-visible');
             grOverlay.classList.remove('gr-instant');
             gsap.set(grOverlay, { clearProps: 'opacity' });
-            // Видео-луп прибытия теперь полностью на экране — даём
+            // Статичный кадр прибытия теперь полностью на экране — даём
             // посетителю посмотреть его RESERVE_HOLD_MS, затем уходим на
             // отдельный сайт Global Reserve (см. определение выше).
             scheduleReserveRedirect();
@@ -999,8 +1097,8 @@
 
       if (reduceMotionQuery.matches) {
         // Пропускаем фазы 1-2 (scale/blur) целиком — сразу cross-fade
-        // фронтальной картинки в видео.
-        startVideoCrossfade(0.3);
+        // фронтальной картинки в статичный кадр прибытия.
+        startArrivalCrossfade(0.3);
         gsap.to(flight, { opacity: 0, duration: 0.3, ease: 'none', onComplete: cleanup });
         return;
       }
@@ -1021,7 +1119,7 @@
 
       const PHASE1 = 1.4 * 0.20; // ~0.28s — предвкушение
       const PHASE2 = 1.4 * 0.55; // ~0.77s — разгон камеры
-      const PHASE3 = 1.4 * 0.25; // ~0.35s — засветка гаснет + cross-fade в видео
+      const PHASE3 = 1.4 * 0.25; // ~0.35s — засветка гаснет + cross-fade в статичный кадр
 
       gsap.set(flightImg, { scale: 1, transformOrigin: '50% 50%', filter: 'blur(0px) brightness(1)' });
 
@@ -1037,14 +1135,15 @@
         duration: PHASE2,
       });
       // Фаза 3: blur/brightness резко гасятся РОВНО в момент cross-fade в
-      // видео — пик засветки маскирует стык между статичной картинкой и
-      // первым кадром видео, стык не читается глазом как скачок.
+      // статичный кадр прибытия — пик засветки маскирует стык между
+      // фронтальной картинкой полёта и кадром хранилища, стык не читается
+      // глазом как скачок.
       tl.addLabel('phase3');
       tl.to(flightImg, {
         filter: 'blur(0px) brightness(1)',
         ease: 'power2.out',
         duration: PHASE3,
-        onStart: () => startVideoCrossfade(PHASE3),
+        onStart: () => startArrivalCrossfade(PHASE3),
       }, 'phase3');
       tl.to(flight, { opacity: 0, duration: PHASE3, ease: 'power2.out' }, 'phase3');
     }
@@ -1062,10 +1161,9 @@
       gsap.set(grOverlay, { clearProps: 'opacity' });
       document.body.classList.remove('gr-entering');
       if (arch2) arch2.classList.remove('gr-hide'); // возвращаем реальную арку в стене к opacity:1
-      // Обратный cross-fade без zoom-out (по ТЗ) — просто fade, ждём его конца перед сбросом видео.
+      // Обратный cross-fade без zoom-out (по ТЗ) — просто fade, ждём его конца перед скрытием оверлея.
       setTimeout(() => {
         if (grOverlay) grOverlay.classList.remove('active');
-        if (grVideo) { grVideo.pause(); grVideo.currentTime = 0; }
       }, 500);
     }
 
@@ -1201,6 +1299,86 @@
 
       document.documentElement.classList.add('cursor-ready');
     }
+  })();
+</script>
+
+<script>
+  // ---------- #gia-entry-flash: hold until the scene is actually ready ----------
+  // Unlike the outgoing #light-flash toward Global Reserve (whose target
+  // frame is tiny and effectively always ready), the images this flash is
+  // covering — layers/wall.png, layers/subjects.png, layers/Gia.png, and
+  // the 6 cropped-new arch images — are ~13MB combined. Measured (clean
+  // browser context, no shared cache, CDP-throttled to 10 Mbps, matching
+  // digital-banker/gia/index.html's own LOBBY_PREFETCH_AT lead time):
+  // the full set finishes downloading only ~13.5s after the visitor
+  // crosses that prefetch trigger — comfortably covered for a visitor who
+  // reads/scrolls at a normal pace, but NOT guaranteed for a fast
+  // scroller or a slower connection. So this can't just wait a short
+  // fixed beat (see PRODUCT_REQUIREMENTS.md/DEVELOPMENT_PLAN.md
+  // 2026-09-21 notes for the measurement and the reasoning below):
+  //   1. Wait for every one of those images' own `load`/`error` event (or
+  //      `.complete` if it already fired before this script ran) — the
+  //      fast path, taken whenever the prefetch had enough of a head
+  //      start, which is most of the time.
+  //   2. If that hasn't resolved within LOADING_PULSE_MS, the wait was
+  //      genuinely longer than expected (slow connection or a fast
+  //      scroller) — rather than cutting the flash early onto a
+  //      half-loaded stage, it starts a slow, deliberate pulse (a loading
+  //      cue, not a stall) and keeps waiting for the real event.
+  //   3. HARD_CEILING_MS is the only forced cutoff, and it's generous
+  //      (comfortably past the measured worst case above) — it exists so
+  //      a request that never fires load OR error (a true network hang,
+  //      not just "slow") can't hold the flash forever, not so it fires
+  //      under ordinary conditions.
+  (function () {
+    var FLASH_OUT_MS = 300;
+    var LOADING_PULSE_MS = 1500;
+    var HARD_CEILING_MS = 15000;
+    var el = document.getElementById('gia-entry-flash');
+    if (!el) return;
+
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function fadeOut() {
+      el.classList.remove('loading');
+      el.style.transition = reduceMotion ? 'none' : 'opacity ' + FLASH_OUT_MS + 'ms ease-in';
+      el.style.opacity = '0';
+      window.setTimeout(function () { el.remove(); }, reduceMotion ? 0 : FLASH_OUT_MS);
+    }
+
+    var criticalImages = Array.prototype.slice.call(
+      document.querySelectorAll('#wallLayer img, #subjectsLayer img, #giaLayer img, .arch-image')
+    );
+    var pending = criticalImages.filter(function (img) { return !img.complete; });
+
+    if (reduceMotion || pending.length === 0) {
+      fadeOut();
+      return;
+    }
+
+    var settled = false;
+    function settle() {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(pulseTimer);
+      window.clearTimeout(ceilingTimer);
+      fadeOut();
+    }
+
+    var remaining = pending.length;
+    pending.forEach(function (img) {
+      function onDone() {
+        remaining -= 1;
+        if (remaining <= 0) settle();
+      }
+      img.addEventListener('load', onDone, { once: true });
+      img.addEventListener('error', onDone, { once: true });
+    });
+
+    var pulseTimer = window.setTimeout(function () {
+      if (!settled) el.classList.add('loading');
+    }, LOADING_PULSE_MS);
+    var ceilingTimer = window.setTimeout(settle, HARD_CEILING_MS);
   })();
 </script>
 

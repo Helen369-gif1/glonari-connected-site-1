@@ -1,0 +1,104 @@
+[     345ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8793/favicon.ico:0
+[  623734ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8794/favicon.ico:0
+[  727813ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://192.168.0.7:8794/favicon.ico:0
+[ 1187712ms] [WARNING] The resource http://192.168.0.7:8794/digital-banker/lobby/layers/Gia.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://192.168.0.7:8794/digital-banker/gia/index.html:0
+[ 1187712ms] [WARNING] The resource http://192.168.0.7:8794/digital-banker/lobby/cropped-new/1.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://192.168.0.7:8794/digital-banker/gia/index.html:0
+[ 1187712ms] [WARNING] The resource http://192.168.0.7:8794/digital-banker/lobby/layers/subjects.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://192.168.0.7:8794/digital-banker/gia/index.html:0
+[ 1187712ms] [WARNING] The resource http://192.168.0.7:8794/digital-banker/lobby/cropped-new/5.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://192.168.0.7:8794/digital-banker/gia/index.html:0
+[ 1187712ms] [WARNING] The resource http://192.168.0.7:8794/digital-banker/lobby/cropped-new/6.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://192.168.0.7:8794/digital-banker/gia/index.html:0
+[ 1187712ms] [WARNING] The resource http://192.168.0.7:8794/digital-banker/lobby/cropped-new/2.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://192.168.0.7:8794/digital-banker/gia/index.html:0
+[ 1187712ms] [WARNING] The resource http://192.168.0.7:8794/digital-banker/lobby/cropped-new/4.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://192.168.0.7:8794/digital-banker/gia/index.html:0
+[ 1187712ms] [WARNING] The resource http://192.168.0.7:8794/digital-banker/lobby/cropped-new/3.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://192.168.0.7:8794/digital-banker/gia/index.html:0
+[ 1187712ms] [WARNING] The resource http://192.168.0.7:8794/digital-banker/lobby/layers/wall.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://192.168.0.7:8794/digital-banker/gia/index.html:0
+[ 1219425ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:27:12
+    at <anonymous>:28:5
+    at <anonymous>:29:7
+[ 1321311ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:27:12
+    at <anonymous>:28:5
+    at <anonymous>:29:7
+[ 1342708ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:27:12
+    at <anonymous>:28:5
+    at <anonymous>:29:7
+[ 1364194ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:27:12
+    at <anonymous>:28:5
+    at <anonymous>:29:7
+[ 1364194ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:24:12
+    at <anonymous>:26:5
+    at <anonymous>:27:7
+[ 1392836ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:27:12
+    at <anonymous>:28:5
+    at <anonymous>:29:7
+[ 1392836ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:24:12
+    at <anonymous>:26:5
+    at <anonymous>:27:7
+[ 1436663ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:27:12
+    at <anonymous>:28:5
+    at <anonymous>:29:7
+[ 1436663ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:24:12
+    at <anonymous>:26:5
+    at <anonymous>:27:7
+[ 1461293ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:27:12
+    at <anonymous>:28:5
+    at <anonymous>:29:7
+[ 1461293ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:24:12
+    at <anonymous>:26:5
+    at <anonymous>:27:7
+[ 1531784ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:27:12
+    at <anonymous>:28:5
+    at <anonymous>:29:7
+[ 1531784ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:24:12
+    at <anonymous>:26:5
+    at <anonymous>:27:7
+[ 1534251ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:27:12
+    at <anonymous>:28:5
+    at <anonymous>:29:7
+[ 1534251ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:24:12
+    at <anonymous>:26:5
+    at <anonymous>:27:7
+[ 1536866ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:27:12
+    at <anonymous>:28:5
+    at <anonymous>:29:7
+[ 1536866ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:24:12
+    at <anonymous>:26:5
+    at <anonymous>:27:7
+[ 1540262ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:27:12
+    at <anonymous>:28:5
+    at <anonymous>:29:7
+[ 1540262ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:24:12
+    at <anonymous>:26:5
+    at <anonymous>:27:7
+[ 1543639ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:27:12
+    at <anonymous>:28:5
+    at <anonymous>:29:7
+[ 1543639ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:24:12
+    at <anonymous>:26:5
+    at <anonymous>:27:7
+[ 1547193ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:27:12
+    at <anonymous>:28:5
+    at <anonymous>:29:7
+[ 1547193ms] TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at <anonymous>:24:12
+    at <anonymous>:26:5
+    at <anonymous>:27:7

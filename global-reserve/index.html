@@ -12,8 +12,48 @@
   <link rel="stylesheet" href="css/screens.css">
   <link rel="stylesheet" href="css/reserve-hologram.css">
   <link rel="stylesheet" href="css/site-shell.css">
+  <!-- Golden flash hand-off from the Digital Banker lobby
+       (digital-banker/lobby/index.html, #light-flash). Inline in <head>,
+       not a linked stylesheet or a JS-added class, so the very first
+       paint is already fully opaque gold — no flash-of-unstyled-content
+       gap while css/site-shell.css or this rule itself would otherwise
+       still be loading. Not part of Screen 1: a separate full-viewport
+       layer above everything on the page, including .site-header
+       (z-index 2000 vs. its 1000), so it does not touch the Screen-1-locked
+       markup/CSS/JS this project's CLAUDE.md protects. -->
+  <style>
+    #light-flash{
+      position:fixed;
+      inset:0;
+      z-index:2000;
+      opacity:1;
+      pointer-events:none;
+      background:radial-gradient(circle, #fff6e0 0%, #ffe9b8 40%, #cd7f32 100%);
+    }
+  </style>
 </head>
 <body>
+
+  <div id="light-flash" aria-hidden="true"></div>
+  <script>
+    // Fades the golden flash above out once the header/video/text underneath
+    // have had a moment to render, revealing the finished page in one smooth
+    // move instead of a hard cut. Independent of js/scrub.js (Screen 1,
+    // locked) and js/site-shell.js — this is its own tiny, self-contained
+    // concern, not scroll- or header-related.
+    (function () {
+      var FLASH_HOLD_MS = 90;
+      var FLASH_OUT_MS = 300;
+      var el = document.getElementById('light-flash');
+      if (!el) return;
+      var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.setTimeout(function () {
+        el.style.transition = reduceMotion ? 'none' : 'opacity ' + FLASH_OUT_MS + 'ms ease-in';
+        el.style.opacity = '0';
+        window.setTimeout(function () { el.remove(); }, reduceMotion ? 0 : FLASH_OUT_MS);
+      }, reduceMotion ? 0 : FLASH_HOLD_MS);
+    })();
+  </script>
 
   <!-- Global site shell — fixed header, mobile menu, registration and login dialogs -->
   <header class="site-header">
@@ -128,7 +168,7 @@
 
         <!-- Video is loaded via JS as a blob for guaranteed full buffering -->
         <div class="video-container">
-          <video id="scrub-video" muted playsinline></video>
+          <video id="scrub-video" muted playsinline poster="media/hero-vault-poster.jpg"></video>
         </div>
 
         <!-- Text overlays for the Global Reserve screen, timed to video progress -->

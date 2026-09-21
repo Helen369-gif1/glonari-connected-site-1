@@ -497,7 +497,7 @@ Every media slot is a `<div class="media-slot" data-slot="...">` with a fixed `a
 
 | Slot | Screen | File | Format | Length | Behaviour |
 |---|---|---|---|---|---|
-| `--media-hero` | 1 | `media/hero-vault.mp4` | 1280x720 | 6s | Scroll-scrubbed. Already present as `video111.mp4`; re-encode with `ffmpeg -i video111.mp4 -g 1 -an media/hero-vault.mp4` |
+| `--media-hero` | 1 | `media/hero-vault.mp4` | 1280x720 | 6s | Scroll-scrubbed. Already present as `video111.mp4`; re-encode with `ffmpeg -i video111.mp4 -g 1 -an media/hero-vault.mp4`. `#scrub-video` carries `poster="media/hero-vault-poster.jpg"` (`hero-vault.mp4`'s own first frame) so the correct frame paints immediately on render, before `js/scrub.js` finishes fetching the video as a blob and assigns `video.src` |
 | `--media-reveal` | 4.5 | `media/reveal-vault.mp4` | 1280x720, 30fps | 4.5s (135 frames), ~1.83MB, autoplaying loop | Plays continuously (`autoplay muted loop`), independent of scroll — scroll drives only the section's mask, overlay, and headline (Section 5.4a) |
 | `--media-question` | 2 | `media/time-scale.mp4` | 1080x1080 | 4-6s | Plays once when the section reaches 40% of the viewport, then holds the last frame. May be generated instead — Section 7.1 |
 | `--media-red` | 3 | `media/red-object.webp` | 800x800, transparent | still | Static. Optional 8-10s loop if a video version is supplied |

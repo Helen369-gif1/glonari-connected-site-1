@@ -1,0 +1,266 @@
+- generic [active] [ref=f6e1]:
+  - banner [ref=f6e2]:
+    - generic [ref=f6e3]:
+      - link "GLOBAL RESERVE®" [ref=f6e4] [cursor=pointer]:
+        - /url: "#screen-1"
+      - navigation "Primary navigation" [ref=f6e7]:
+        - list [ref=f6e8]:
+          - listitem [ref=f6e9]:
+            - link "Overview" [ref=f6e10] [cursor=pointer]:
+              - /url: "#screen-2"
+          - listitem [ref=f6e11]:
+            - link "RED" [ref=f6e12] [cursor=pointer]:
+              - /url: "#screen-3"
+          - listitem [ref=f6e13]:
+            - link "Rewards" [ref=f6e14] [cursor=pointer]:
+              - /url: "#screen-4"
+          - listitem [ref=f6e15]:
+            - link "Reserve" [ref=f6e16] [cursor=pointer]:
+              - /url: "#screen-5-5"
+          - listitem [ref=f6e17]:
+            - link "Gia" [ref=f6e18] [cursor=pointer]:
+              - /url: "#screen-7"
+      - generic [ref=f6e19]:
+        - button "Log in" [ref=f6e20] [cursor=pointer]
+        - button "Register" [ref=f6e21] [cursor=pointer]
+  - generic [ref=f6e24]:
+    - generic:
+      - generic:
+        - paragraph:
+          - generic: Global
+          - generic: Reserve®
+          - generic: —
+          - generic: Your
+          - generic: Asset
+          - generic: Control
+          - generic: Center
+      - generic:
+        - paragraph:
+          - generic: Think
+          - generic: of
+          - generic: it
+          - generic: as
+          - generic: the
+          - generic: smart
+          - generic: hub
+          - generic: behind
+          - generic: your
+          - generic: Glonari
+          - generic: participation
+          - generic: —
+          - generic: one
+          - generic: place
+          - generic: that
+          - generic: tracks
+          - generic: your
+          - generic: housing
+          - generic: payments,
+          - generic: rewards,
+          - generic: and
+          - generic: reserves,
+          - generic: so
+          - generic: you
+          - generic: don't
+          - generic: have
+          - generic: to
+          - generic: juggle
+          - generic: them
+          - generic: yourself.
+  - generic [ref=f6e27]:
+    - heading "Everyone asks how much they have. Almost nobody can answer how long they're covered." [level=2] [ref=f6e28]: Everyone asks how much they have.Almost nobody can answer how long they're covered.
+    - paragraph [ref=f6e29]: A balance tells you about today. It doesn't tell you how many years your housing is financially covered. Global Reserve answers the second question — it reads everything you hold, everything you owe on housing, and turns it into time.
+    - generic [ref=f6e30]:
+      - paragraph [ref=f6e31]: Years of housing covered
+      - paragraph [ref=f6e32]: 8.5 years
+      - paragraph [ref=f6e33]: Your own number depends on what you hold and what you owe.
+  - generic [ref=f6e37]:
+    - generic [ref=f6e38]:
+      - paragraph [ref=f6e39]: THE PART EVERYONE ASKS ABOUT FIRST
+      - heading "RED isn't money. It's housing, paid forward." [level=2] [ref=f6e40]
+    - paragraph [ref=f6e68]: "RED — Real Estate Dollars — are credits that exist for one purpose: covering your housing inside Glonari. Your monthly housing fee comes out of them, and they're what stands behind you when you move on a property. They're used, not traded — which is exactly why they hold their job instead of drifting off into something else."
+    - generic [ref=f6e69]:
+      - paragraph [ref=f6e70]: Made for housing, and nothing else
+      - paragraph [ref=f6e71]: Spent as you live, not held as an investment
+      - paragraph [ref=f6e72]: The more you hold, the longer you're covered
+  - generic [ref=f6e74]:
+    - heading "When the system saves you money, you keep it." [level=2] [ref=f6e75]
+    - paragraph [ref=f6e76]: "Glonari is always looking for a better price, a better term, a smaller fee. When it finds one, the saving doesn't disappear into the platform — it comes back to you as rewards, and those rewards work on the same thing everything else here works on: your housing."
+    - paragraph [ref=f6e77]: Nothing to claim. Nothing to chase. It happens whether you're watching or not.
+  - generic [ref=f6e82]:
+    - generic:
+      - heading "This is what it's all for." [level=2]:
+        - generic: This
+        - generic: is
+        - generic: what
+        - generic: it's
+        - generic: all
+        - generic: for.
+  - generic [ref=f6e86]:
+    - generic [ref=f6e87]:
+      - heading "Your reserve is never just sitting there." [level=2] [ref=f6e88]
+      - paragraph [ref=f6e89]: At any moment, part of what you hold is free, part is set aside for a home you're working toward, and part is holding a home you already have. Global Reserve labels every piece, all the time, so you always know what you can use and what's already spoken for.
+    - generic [aria-hidden] [ref=f6e90]:
+      - generic [ref=f6e91]: Ready
+      - generic [ref=f6e93]: Committed
+      - generic [ref=f6e95]: Reserved
+      - generic [ref=f6e97]: Scheduled
+    - generic [ref=f6e99]:
+      - generic [ref=f6e100]:
+        - paragraph [ref=f6e101]: Ready
+        - paragraph [ref=f6e102]: Free to cover your housing or grow your position.
+      - generic [ref=f6e103]:
+        - paragraph [ref=f6e104]: Committed
+        - paragraph [ref=f6e105]: Held while you work toward a property.
+      - generic [ref=f6e106]:
+        - paragraph [ref=f6e107]: Reserved
+        - paragraph [ref=f6e108]: Holding a home that's already yours.
+      - generic [ref=f6e109]:
+        - paragraph [ref=f6e110]: Scheduled
+        - paragraph [ref=f6e111]: Arriving later, managed for you.
+    - paragraph [ref=f6e112]: No hidden totals. No number that means two things at once.
+  - generic [ref=f6e132]:
+    - generic [ref=f6e135]:
+      - paragraph [ref=f6e136]: GLOBAL RESERVE®
+      - generic [ref=f6e137]:
+        - heading "Your reserve at a glance" [level=2] [ref=f6e138]
+        - paragraph [ref=f6e139]: Example interface — not your account.
+    - generic [ref=f6e140]:
+      - generic [ref=f6e141]:
+        - generic [ref=f6e142]:
+          - paragraph [ref=f6e143]: Ready
+          - paragraph [ref=f6e144]: $42,800
+          - paragraph [ref=f6e145]: Free to use today
+        - generic [ref=f6e146]:
+          - paragraph [ref=f6e147]: Scheduled
+          - paragraph [ref=f6e148]: 90 days
+          - paragraph [ref=f6e149]: Arriving on its own timeline
+      - generic [ref=f6e152]:
+        - paragraph [ref=f6e153]: 82%
+        - paragraph [ref=f6e154]: Ready
+      - generic [ref=f6e155]:
+        - generic [ref=f6e156]:
+          - paragraph [ref=f6e157]: Reserved
+          - paragraph [ref=f6e158]: $18,000
+          - paragraph [ref=f6e159]: Holding a home you already have
+        - generic [ref=f6e160]:
+          - paragraph [ref=f6e161]: Committed
+          - paragraph [ref=f6e162]: 78%
+          - paragraph [ref=f6e163]: Toward a property you'reworking on
+    - paragraph [ref=f6e167]: Explore the example
+  - generic [ref=f6e169]:
+    - generic [ref=f6e170]:
+      - img "A modern hillside villa with an infinity pool overlooking the coast at sunset" [ref=f6e172]
+      - generic [ref=f6e173]:
+        - heading "A home here doesn't start with a signature. It starts with holding steady." [level=2] [ref=f6e174]: A home here doesn't start with a signature.It starts with holding steady.
+        - paragraph [ref=f6e175]: "Before you take on a property, you go through a qualifying period: you set aside what's required and you keep it there. That's it. No credit theatre, no paperwork marathon — the proof is that you held your position. Global Reserve runs the clock, watches the threshold, and shows you the home you're working toward the whole way through."
+    - list [ref=f6e176]:
+      - listitem [ref=f6e177]:
+        - generic [ref=f6e179]: Choose the home you're working toward
+      - listitem [ref=f6e180]:
+        - generic [ref=f6e182]: Set aside what it requires
+      - listitem [ref=f6e183]:
+        - generic [ref=f6e185]: Hold — and watch the days come down
+      - listitem [ref=f6e186]:
+        - generic [ref=f6e188]: Qualify, and move
+    - paragraph [ref=f6e189]: If your position slips below what's required, the clock resets. You'll hear about it early, while it's still easy to fix.
+  - generic [ref=f6e193]:
+    - generic [ref=f6e196]:
+      - paragraph [ref=f6e197]: "\"Your housing is covered into the mid-2030s.\""
+      - paragraph [ref=f6e198]: "\"Nothing needs your attention today.\""
+    - generic [ref=f6e199]:
+      - paragraph [ref=f6e200]: THE PART THAT THINKS
+      - heading "Gia isn't a chat window. She's the reason this feels simple." [level=2] [ref=f6e201]
+      - paragraph [ref=f6e202]: Gia is the intelligence running underneath Global Reserve. She's mostly invisible, and that's the point — you should be living your life, not administering it.
+      - generic [ref=f6e203]:
+        - generic [ref=f6e204]:
+          - paragraph [ref=f6e205]: She explains.
+          - paragraph [ref=f6e206]: "Every change gets one sentence in plain language. Not a log entry, an answer: \"At your current position, your housing is covered into the mid-2030s.\""
+        - generic [ref=f6e207]:
+          - paragraph [ref=f6e208]: She watches.
+          - paragraph [ref=f6e209]: If your qualifying position starts drifting toward trouble, you hear it while it's still small.
+        - generic [ref=f6e210]:
+          - paragraph [ref=f6e211]: She handles.
+          - paragraph [ref=f6e212]: Your monthly housing fee is taken care of in the background. No transfers, no reminders, no late anything.
+        - generic [ref=f6e213]:
+          - paragraph [ref=f6e214]: She looks ahead.
+          - paragraph [ref=f6e215]: She keeps an eye on what your housing will need later and quietly keeps your position moving in that direction.
+        - generic [ref=f6e216]:
+          - paragraph [ref=f6e217]: She marks the moments.
+          - paragraph [ref=f6e218]: First foundation. First qualification. First home secured. Years of work shouldn't end up as a line in a transaction list.
+      - paragraph [ref=f6e219]: Gia never moves anything without your permission. She just makes sure you never have to guess.
+  - generic [ref=f6e220]:
+    - generic [ref=f6e222]:
+      - heading "Nothing happens quietly." [level=2] [ref=f6e223]
+      - paragraph [ref=f6e224]: Every movement in your reserve is written down the moment it happens, with the date and the reason attached. Not a statement that arrives at the end of the month — a history you can open right now, at two in the morning, for no reason at all.
+    - generic [ref=f6e226]:
+      - list [ref=f6e227]:
+        - listitem [ref=f6e228]: Housing fee covered
+        - listitem [ref=f6e229]: Rewards earned
+        - listitem [ref=f6e230]: Position committed
+        - listitem [ref=f6e231]: Qualification started
+        - listitem [ref=f6e232]: Qualification complete
+        - listitem [ref=f6e233]: Home reserved
+        - listitem [aria-hidden] [ref=f6e234]: Housing fee covered
+        - listitem [aria-hidden] [ref=f6e235]: Rewards earned
+        - listitem [aria-hidden] [ref=f6e236]: Position committed
+        - listitem [aria-hidden] [ref=f6e237]: Qualification started
+        - listitem [aria-hidden] [ref=f6e238]: Qualification complete
+        - listitem [aria-hidden] [ref=f6e239]: Home reserved
+      - list [aria-hidden] [ref=f6e240]:
+        - listitem [ref=f6e241]: Housing fee covered
+        - listitem [ref=f6e242]: Rewards earned
+        - listitem [ref=f6e243]: Position committed
+        - listitem [ref=f6e244]: Qualification started
+        - listitem [ref=f6e245]: Qualification complete
+        - listitem [ref=f6e246]: Home reserved
+        - listitem [ref=f6e247]: Housing fee covered
+        - listitem [ref=f6e248]: Rewards earned
+        - listitem [ref=f6e249]: Position committed
+        - listitem [ref=f6e250]: Qualification started
+        - listitem [ref=f6e251]: Qualification complete
+        - listitem [ref=f6e252]: Home reserved
+  - generic [ref=f6e256]:
+    - heading "You don't need a plan yet. You just need to see where you stand." [level=2] [ref=f6e257]: You don't need a plan yet.You just need to see where you stand.
+    - paragraph [ref=f6e258]: Open Global Reserve and you'll see how long you're covered, what's already working for you, and what the next step looks like — with Gia already watching the parts you'd rather not think about.
+    - generic [ref=f6e259]:
+      - link "Open Your Reserve" [ref=f6e260] [cursor=pointer]:
+        - /url: "#"
+      - link "Talk to Gia First" [ref=f6e261] [cursor=pointer]:
+        - /url: "#"
+  - contentinfo [ref=f6e262]:
+    - generic [ref=f6e263]:
+      - img "GLOBAL RESERVE® — SECURE TODAY. EMPOWER TOMORROW." [ref=f6e264]
+      - navigation "Footer navigation" [ref=f6e265]:
+        - list [ref=f6e266]:
+          - listitem [ref=f6e267]:
+            - link "Overview" [ref=f6e268] [cursor=pointer]:
+              - /url: "#screen-2"
+          - listitem [ref=f6e269]:
+            - link "RED" [ref=f6e270] [cursor=pointer]:
+              - /url: "#screen-3"
+          - listitem [ref=f6e271]:
+            - link "Rewards" [ref=f6e272] [cursor=pointer]:
+              - /url: "#screen-4"
+          - listitem [ref=f6e273]:
+            - link "Reserve" [ref=f6e274] [cursor=pointer]:
+              - /url: "#screen-5-5"
+          - listitem [ref=f6e275]:
+            - link "Gia" [ref=f6e276] [cursor=pointer]:
+              - /url: "#screen-7"
+          - listitem [ref=f6e277]:
+            - link "Terms" [ref=f6e278] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=f6e279]:
+            - link "Privacy" [ref=f6e280] [cursor=pointer]:
+              - /url: "#"
+      - generic [ref=f6e281]:
+        - link "Instagram" [ref=f6e282] [cursor=pointer]:
+          - /url: "#"
+        - link "LinkedIn" [ref=f6e287] [cursor=pointer]:
+          - /url: "#"
+        - link "X" [ref=f6e293] [cursor=pointer]:
+          - /url: "#"
+        - link "YouTube" [ref=f6e297] [cursor=pointer]:
+          - /url: "#"
+      - paragraph [ref=f6e301]: Global Reserve is part of the Glonari platform. This page is for product information only and is not a statement of account.
+      - paragraph [ref=f6e302]: © 2026 Global Reserve
