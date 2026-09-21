@@ -159,7 +159,9 @@ Full-bleed scroll-scrubbed video, text centered over it, 300vh runway, sticky vi
 | Body | `Think of it as the smart hub behind your Glonari participation — one place that tracks your housing payments, rewards, and reserves, so you don't have to juggle them yourself.` | `--fs-hero-body`, Playfair 700 | centered, top 40% |
 | Button 1 | `See How It Works` | primary | centered, 48px under body |
 | Button 2 | `Meet Gia` | secondary | centered, beside button 1 |
-| Scroll hint | `Scroll — it takes about a minute` | `--fs-caption` | centered, 64px from bottom |
+| Scroll hint | `Scroll` | `--fs-caption` | centered, 64px from bottom, with a drifting vertical line underneath |
+
+Scroll hint implemented 2026-09-21, replacing the originally specified `Scroll — it takes about a minute` copy at direct user request: it now reuses digital-banker/gia/index.html's own `.cue` pattern verbatim (short caption + drifting line, `#scroll-cue`/`.scroll-cue__line` in `css/screens.css`), including that page's progress-based opacity fade (fully visible through ~4.5% of this screen's own local scroll progress, easing out by ~9%) driven from `js/scrub.js`'s existing `getProgress()`, rather than a fixed pixel/class threshold. Buttons 1 and 2 in the row above remain unimplemented — out of scope for this pass, not touched.
 
 Timing, unchanged from `global_reserve_timecoding.md`:
 

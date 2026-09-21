@@ -59,6 +59,8 @@
   <header class="site-header">
     <div class="container site-header__inner">
 
+      <a class="site-header__back" href="../digital-banker/lobby/index.html" aria-label="Back to Digital Banker lobby">&larr;</a>
+
       <a class="site-header__brand" href="#screen-1">
         <img src="media/logo/gr-emblem.png" alt="" aria-hidden="true" class="site-header__emblem">
         <span class="site-header__wordmark">GLOBAL RESERVE®</span>
@@ -178,6 +180,17 @@
           </div>
           <div class="text-block text-block-2" id="text-block-2">
             <p>Think of it as the smart hub behind your Glonari participation — one place that tracks your housing payments, rewards, and reserves, so you don't have to juggle them yourself.</p>
+          </div>
+
+          <!-- Scroll hint (Section 5.1) -- was specified but never actually
+               implemented. Added now using the same fixed visual language
+               and progress-based fade as digital-banker/gia/index.html's
+               own .cue, opacity driven from this screen's own local scroll
+               progress (js/scrub.js's getProgress(), scoped to
+               .chapters-wrapper) rather than the whole 10-screen page. -->
+          <div class="scroll-cue" id="scroll-cue" aria-hidden="true">
+            <span>Scroll</span>
+            <span class="scroll-cue__line"></span>
           </div>
         </div>
 

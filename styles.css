@@ -387,3 +387,58 @@ html, body {
   opacity: 1;
   pointer-events: all;
 }
+
+/* ---------- Persistent "Explore" hint ----------
+   The one screen in the connected chain where interaction never ends (no
+   scroll runway, no one-shot action) and never needs its own hide logic —
+   unlike digital-banker/gia/index.html's .cue (which fades out as the
+   visitor scrolls past it) or digital-banker/lobby/index.html's .back-link
+   (which hides only during that screen's own modal/transition states),
+   this hint stays visible for as long as the scene itself is on screen,
+   with the sole exception of the section modal covering it (same
+   body.modal-active flag main.js now sets — see sectionModal.create()
+   above). Split into an outer element (position/visibility, driven by the
+   modal-active class) and an inner one (the continuous opacity pulse) so
+   the two concerns don't fight over the same `opacity` property — the
+   same split GIA's .cue/.cue__line already uses. */
+.explore-hint {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(20px, 3.4vh, 44px);
+  transform: translateX(-50%);
+  z-index: 50;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.explore-hint__text {
+  display: block;
+  font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.45);
+  animation: exploreHintPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes exploreHintPulse {
+  0%, 100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+body.modal-active .explore-hint {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .explore-hint__text {
+    animation: none;
+    opacity: 1;
+  }
+}

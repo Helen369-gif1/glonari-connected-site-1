@@ -519,7 +519,17 @@
     // The modal visually covers the building being hovered/clicked — drop
     // its hover state so the glow/scale doesn't linger, pointlessly, under
     // the overlay for as long as the modal stays open.
-    onOpen: clearBuildingHover,
+    onOpen: () => {
+      clearBuildingHover();
+      // Same body-level flag digital-banker/lobby/index.html already uses
+      // to hide its own persistent hint while a modal covers the scene —
+      // .explore-hint (styles.css) is hidden by this class, not by any
+      // per-element open/close call here.
+      document.body.classList.add('modal-active');
+    },
+    onClose: () => {
+      document.body.classList.remove('modal-active');
+    },
   });
 
   viewport.addEventListener('click', () => {

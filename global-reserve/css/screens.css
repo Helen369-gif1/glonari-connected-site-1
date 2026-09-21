@@ -110,6 +110,61 @@
   }
 }
 
+/* ── Scroll hint (Section 5.1) ──
+   Same fixed visual language as digital-banker/gia/index.html's .cue:
+   Roboto (already loaded for this page, Section 4.1's Screen 5.5
+   exception), small uppercase caption, wide letter-spacing, a drifting
+   vertical line underneath. Its opacity is driven every scroll frame from
+   this screen's own local progress in js/scrub.js -- not a hard
+   pixel/class threshold -- so it fades out gradually instead of vanishing
+   on the first scroll tick, and it reads only this section's runway
+   (.chapters-wrapper), never the whole 10-screen page's scroll position. */
+.scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(20px, 3.4vh, 44px);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-family: "Roboto", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.scroll-cue__line {
+  width: 1px;
+  height: clamp(28px, 5vh, 52px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0));
+  animation: scrollCueDrift 2.2s ease-in-out infinite;
+}
+
+@keyframes scrollCueDrift {
+  0%, 100% {
+    transform: scaleY(0.55);
+    transform-origin: top;
+    opacity: 0.55;
+  }
+  50% {
+    transform: scaleY(1);
+    transform-origin: top;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue__line {
+    animation: none;
+  }
+}
+
 /* ── Media slot (Section 6) ──
    Generic wrapper for a fixed-aspect media area. Individual screens set
    the aspect-ratio via their own selector, since it varies per slot. */

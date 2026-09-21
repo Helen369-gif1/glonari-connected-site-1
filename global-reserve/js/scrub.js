@@ -1,10 +1,28 @@
 (() => {
   const video = document.getElementById('scrub-video');
   const wrapper = document.querySelector('.chapters-wrapper');
+  const scrollCue = document.getElementById('scroll-cue');
 
   let videoDuration = 0;
   let videoReady = false;
   let latestProgress = 0;
+
+  // ── Scroll cue fade ──
+  // Same ramp()/smoothstep() technique as digital-banker/gia/index.html's
+  // .cue: fully visible through CUE_FADE_START of this screen's own local
+  // progress (getProgress(), below -- .chapters-wrapper only, never the
+  // whole page), then eases out over the next span. Values match GIA's
+  // tuned fix exactly, so the same "gone after one light scroll tick" bug
+  // isn't reintroduced here.
+  const CUE_FADE_START = 0.045;
+  const CUE_FADE_END = 0.09;
+
+  function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function smoothstep(v) { return v * v * (3 - 2 * v); }
+  function ramp(t, a, b) {
+    if (b <= a) return t >= b ? 1 : 0;
+    return smoothstep(clamp01((t - a) / (b - a)));
+  }
 
   // ── Text block timecoding (global_reserve_timecoding.md) ──
   // A single GSAP timeline (paused, driven manually by .time()) holds every
@@ -128,6 +146,9 @@
   function update() {
     const progress = getProgress();
     latestProgress = progress;
+    if (scrollCue) {
+      scrollCue.style.opacity = (1 - ramp(progress, CUE_FADE_START, CUE_FADE_END)).toFixed(3);
+    }
   }
 
   function onScroll() {

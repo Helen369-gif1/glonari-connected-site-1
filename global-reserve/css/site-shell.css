@@ -40,6 +40,24 @@ html {
   gap: 24px;
 }
 
+.site-header__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--gr-text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.site-header__back:hover {
+  color: var(--gr-text-primary);
+}
+
 .site-header__brand {
   display: flex;
   align-items: center;
@@ -132,6 +150,7 @@ html {
 
 .site-header__btn:focus-visible,
 .site-header__hamburger:focus-visible,
+.site-header__back:focus-visible,
 .site-header__brand:focus-visible,
 .site-header__nav-list a:focus-visible {
   outline: 2px solid var(--gr-bronze);
@@ -469,6 +488,7 @@ html {
 
 @media (prefers-reduced-motion: reduce) {
   .site-header__btn,
+  .site-header__back,
   .site-header__nav-list a,
   .site-footer__nav a,
   .site-footer__social-link,

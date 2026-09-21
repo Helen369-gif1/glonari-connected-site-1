@@ -216,6 +216,14 @@
     </div>
   </div>
 
+  <!-- Persistent hint: the only screen in the connected chain with no
+       scroll/one-shot action to hide it after, so unlike GIA's .cue it has
+       no fade-out logic at all — only hidden while the section modal is
+       open (body.modal-active, see main.js/styles.css). -->
+  <div class="explore-hint" aria-hidden="true">
+    <span class="explore-hint__text">Explore</span>
+  </div>
+
   <div class="cursor-dot" aria-hidden="true"></div>
   <div class="cursor-ring" aria-hidden="true"></div>
 
