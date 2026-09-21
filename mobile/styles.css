@@ -1,0 +1,479 @@
+/* box-sizing/margin/padding reset lives in ../design-tokens.css (linked
+   in index.html before this file) — shared with desktop's styles.css,
+   not duplicated here. */
+
+html, body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #0d0d0d;
+}
+
+.screen {
+  position: relative;
+  width: 440px;
+  height: 956px;
+  overflow: hidden;
+  background: #000;
+}
+
+/* ---------- Layered mobile scene, carousel rebuild (2026-08-23) ----------
+   Bands down .screen's fixed 956px height, all fixed px (2026-08-23,
+   later still — no more %/calc() here, so nothing shifts if any one
+   band's own numbers change independently):
+     0px   - 254px  sky (clean, no buildings)
+     254px - 514px  building carousel (260px tall)
+     514px - 956px  ground layer (assets/background.png, hedge + pavement, 442px tall)
+   254 + 260 + 442 = 956, exactly. The ground layer is rendered at its own
+   true 440x442 cropped size (mobile/assets/background-cropped.png,
+   autocropped from the shared assets/background.png, ~46% of screen
+   height) rather than force-fit/cropped into an arbitrary box — .screen
+   is a fixed 440px-wide frame that exactly matches that asset's native
+   width, so at `height: 442px` it needs no scaling or object-fit
+   cropping at all, and the hedge/steps/pavement read at their real,
+   undistorted proportions with zero content loss (confirmed via a full
+   alpha-channel scan: the file has no leftover transparent margin to
+   trim, only real hedge/plaza content top to bottom — see the matching
+   DEVELOPMENT_PLAN.md Stage 14 note). The missing height this leaves the
+   carousel band relative to the reference mockup's own ~37%/~63% split
+   is deliberately taken from the sky band instead (254px, not 354px) —
+   the ground layer's real proportions are the fixed, load-bearing
+   constraint now; sky/carousel absorb the difference. `.carousel`'s
+   `top`/`height` and `.mobile-plaza`'s `height` are the three numbers
+   that must keep summing to 956px if any of them ever changes. */
+
+.mobile-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.mobile-sky__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* ---------- Building carousel ----------
+   A real looping carousel (see main.js), not native overflow scrolling:
+   `.carousel-track` is a flex row of 9 `.building-frame` slides (a
+   cloned last + the 7 real buildings in source order + a cloned first,
+   for seamless wrap) moved via JS-controlled `transform: translateX()`.
+   `.carousel-viewport` clips it with `overflow: hidden` — there is no
+   native scrollbar to begin with, since nothing here ever scrolls, only
+   transforms. */
+.carousel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* 254 (the sum-to-956 value, see the layered-scene comment above) + a
+     deliberate 20px sink so building bases land under the ground layer's
+     top edge (514px, still bottom:0/height:442px, unmoved) instead of
+     stopping exactly at the seam — see the ground-layer comment below. */
+  top: 274px;
+  height: 260px;
+  z-index: 1;
+}
+
+.carousel-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /* Was `pan-y` (2026-08-23): the idiomatic value for a horizontal
+     carousel that sits inside a vertically-scrollable page, since it
+     lets the browser keep native vertical scroll while leaving
+     horizontal gestures to JS. That page-scroll case doesn't exist
+     here, though — .screen (see the layered-scene comment above) is a
+     fixed 440x956 box, so there is nothing to vertically pan inside or
+     around this element in the first place. `pan-y` still grants the
+     browser license to arbitrate the gesture as a vertical pan based on
+     the touch's initial angle (a real finger's first move is rarely
+     perfectly horizontal), and main.js's pointer handlers never called
+     preventDefault() to contest that — so a swipe with any vertical
+     component could lose the gesture to the browser (pointercancel,
+     nothing dragged) with no scroll actually happening either, since
+     there was nothing to scroll. `none` removes that ambiguity entirely
+     for this element: no native panning/zooming is ever attempted here,
+     so every touch gesture starting on the carousel reaches main.js's
+     pointermove as a full, uninterrupted sequence (2026-08-24). */
+  touch-action: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.carousel-viewport::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.carousel-track {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  transition: transform 340ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+
+.carousel-track.no-anim {
+  transition: none;
+}
+
+/* Each slide is a fixed-width slot (kept in sync with SLOT_WIDTH in
+   main.js). At the 440px viewport width this leaves ~105px of the
+   neighboring slide peeking in on each side of the active one — a
+   45%-ish reveal, matching the reference mockup's partially-visible
+   side buildings. Slot width/size itself is untouched by the
+   margin-right below — that's spacing between slots, not slot size. */
+.building-frame {
+  position: relative;
+  flex: 0 0 230px;
+  height: 100%;
+  /* Negative margin pulls slots closer together (kept in sync with
+     OVERLAP in main.js, which uses the same number to shrink the
+     translateX step between positions to match). 70px fully closed the
+     gap between neighbors (touching/overlapping, no visible sky between
+     them — see the main.js comment); reduced to 30px, which keeps a
+     clearly visible gap while still pulling neighbors noticeably closer
+     than the pre-overlap (0px) spacing. Each of the 7 building canvases
+     already carries its own transparent padding beyond the guaranteed
+     46px margin from the 60% side-building scale (see
+     .building-frame:not(.is-active) below), so 30px was checked against
+     all 7 buildings as both left and right neighbor — no clipping on any
+     of them (verified via headless screenshot, 2026-08-24). */
+  margin-right: -30px;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  /* Drives the .is-pressed touch-feedback transition below — kept on
+     the frame's own transform/filter (not .building-face's, which
+     already carries the frontal/angled crossfade + is-prev/is-next
+     mirroring), so the two systems stack independently instead of
+     sharing one `transition` value. */
+  transition: transform 140ms ease, filter 140ms ease;
+}
+
+/* Two faces (frontal + angled) are stacked in the same slot and
+   crossfaded via opacity — one always fully transparent, so there is
+   no layout impact from having two <img> per frame. Both share the
+   same 690×780 canvas and bottom alignment as the frontal-only source,
+   so no separate scale/position is needed per face. */
+.building-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  display: block;
+  transform-origin: bottom center;
+  transition: transform 340ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 340ms ease, filter 260ms ease;
+  /* Without this, a mouse-drag test (main.js's pointerdown/move/up drag
+     handlers, since setPointerCapture alone doesn't stop it) starting on
+     one of these <img> elements triggers the browser's own native
+     image-drag-and-drop instead: past a few pixels of movement, the
+     browser takes over the gesture as a drag-ghost operation and stops
+     delivering any further mousemove/pointermove to JS entirely until
+     the drag ends — silently breaking the carousel's mouse-drag path
+     confirmed via headless Chromium: with this unset, a scripted
+     mousedown+move+up sequence produced exactly one pointermove and no
+     carousel movement; with it set, the same sequence produced a
+     pointermove per step and paged the carousel correctly (2026-08-24).
+     Touch was unaffected either way — mobile browsers don't initiate
+     native image DnD from a touch gesture the same way. */
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* Active (centered) building shows its frontal face; side buildings
+   show the ¾-angled face — crossfaded via opacity, not swapped abruptly. */
+.building-frame.is-active .building-face--frontal { opacity: 1; }
+.building-frame.is-active .building-face--angled { opacity: 0; }
+.building-frame:not(.is-active) .building-face--frontal { opacity: 0; }
+.building-frame:not(.is-active) .building-face--angled { opacity: 0.7; }
+
+/* Side (inactive) buildings: a single discount factor so they read as
+   smaller, peeking neighbors next to the active building. Applies to
+   whichever face is actually visible at that moment (see above). */
+.building-frame:not(.is-active) .building-face {
+  transform: scale(0.6);
+  filter: saturate(0.85) brightness(0.92);
+}
+
+.building-frame.is-active .building-face {
+  filter: none;
+}
+
+/* The ¾-angled source is reused unmirrored on both peeking sides, but
+   each render is a single fixed camera shot — the same image can't
+   correctly face both left (as the is-prev neighbor, front should point
+   right toward the centered building) and right (as is-next, front
+   should point left) without mirroring one side. The 7 renders do NOT
+   share one consistent camera azimuth: banker/global-dream/
+   glonari-ancillary read as one convention (unmirrored is-prev
+   correctly points that front toward center — mirroring is-next
+   instead, the opposite of what's below, was tried and confirmed wrong
+   by screenshot: every building turned away from center instead of
+   toward it, so the sides here are deliberately the reverse of that),
+   while global-connections/glonari-news/pulse are the opposite
+   convention, needing the opposite fix, in the override block below.
+   Persona reads close enough to symmetric (a round rotunda) that either
+   choice looks the same. So a single global rule can only get the
+   majority right; this mirrors is-prev by default (correct for the
+   majority) and overrides back to the opposite side for the three
+   outlier buildings below. Same specificity as the scale(0.6) rule
+   above (2 classes + 1 class), so this must stay later in the cascade
+   to win; combines scaleX(-1) with the unchanged scale(0.6) in one
+   value since `transform` isn't additive across rules. Known tradeoff,
+   not fixed here: mirroring also flips whatever facade signage text the
+   angled render carries, so the building name reads backwards on
+   whichever side ends up mirrored — accepted because every one of the 7
+   angled renders carries that text on its front face, so no choice of
+   which side to mirror avoids it, and the wrong-facing direction this
+   fixes is the more visible defect at the peeking side's
+   60%-scale/0.7-opacity size. */
+.building-frame.is-prev .building-face--angled {
+  transform: scale(0.6) scaleX(-1);
+}
+
+/* Outliers (see comment above): global-connections, glonari-news, and
+   pulse need the mirror on the opposite side from every other building
+   — reset is-prev back to unmirrored and mirror is-next instead, for
+   just these three. One class more specific than the two rules above,
+   so these win regardless of cascade order. */
+.building-frame.building-global-connections.is-prev .building-face--angled,
+.building-frame.building-glonari-news.is-prev .building-face--angled,
+.building-frame.building-pulse.is-prev .building-face--angled {
+  transform: scale(0.6);
+}
+
+.building-frame.building-global-connections.is-next .building-face--angled,
+.building-frame.building-glonari-news.is-next .building-face--angled,
+.building-frame.building-pulse.is-next .building-face--angled {
+  transform: scale(0.6) scaleX(-1);
+}
+
+/* Bug report (2026-08-25, later still): a building visibly "jumps"/
+   squashes horizontally right as it becomes active. Root cause has
+   nothing to do with asset alignment (persona's frontal/angled bitmaps
+   are pixel-identical) — it's `transform` interpolation across a sign
+   change. Whichever peeking side is this building's mirrored one (per
+   the two rules above) has `scaleX(-1)` on its angled face; going active
+   removes ALL transform (`.building-frame.is-active .building-face`
+   below sets no transform, so it falls back to the base `.building-face`
+   rule's implicit `none`). The browser's default matrix-decomposition
+   interpolation between `scale(0.6) scaleX(-1)` and `none` doesn't "flip
+   through" — it linearly interpolates the scaleX component itself
+   (-0.6 → 1), passing through 0 partway, i.e. the image visibly squashes
+   to a sliver and un-mirrors, confirmed by sampling the computed
+   `transform` matrix frame-by-frame during a real activation.
+   Two-sided fix, both scoped only to the exact combinations that
+   actually flip sign — the other 7 of the 14 building/side combinations
+   (each building's non-mirrored peeking side) are untouched and keep
+   their normal smooth 340ms transform transition. */
+
+/* Forward (arriving at active): safe to apply to every building
+   uniformly, mirrored side or not — by the time `transform` would
+   otherwise be mid-flip, `opacity` (still animating on its own normal
+   340ms `ease` curve) has already decayed to a fraction of a percent, so
+   snapping the now-irrelevant transform late, once the angled face is
+   effectively invisible, costs nothing visually for the safe (non-flip)
+   combinations either. `transition-delay: 300ms` keeps the OLD transform
+   value (whatever it was) for the first 300ms of the 340ms activation —
+   no interpolation, hence no pass through a squashed zero-scale state —
+   then snaps instantly to the new value while opacity is already
+   negligible. */
+.building-frame.is-active .building-face--angled {
+  transition: transform 0s linear 300ms, opacity 340ms ease, filter 260ms ease;
+}
+
+/* Reverse (leaving active for a peeking slot): opacity is rising from 0
+   here, the opposite of the forward case, so the safe window is at the
+   START, not the end — an instant (0s), undelayed transform snap means
+   the mirrored size/orientation is already correct from the very first
+   frame, while opacity is still ~0. Deliberately scoped to only the 7
+   building+side combinations that are actually this building's mirrored
+   side (matching the two `transform`-setting rules above exactly) — the
+   other 7 keep their existing smooth shrink-while-fading-in transform
+   transition, since those never flip sign and were never buggy. */
+.building-frame.building-persona.is-prev .building-face--angled,
+.building-frame.building-banker.is-prev .building-face--angled,
+.building-frame.building-global-dream.is-prev .building-face--angled,
+.building-frame.building-glonari-ancillary.is-prev .building-face--angled,
+.building-frame.building-global-connections.is-next .building-face--angled,
+.building-frame.building-glonari-news.is-next .building-face--angled,
+.building-frame.building-pulse.is-next .building-face--angled {
+  transition: transform 0s linear, opacity 340ms ease, filter 260ms ease;
+}
+
+.building-frame:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: -2px;
+}
+
+/* Explicit touch/press feedback (2026-08-24), toggled by main.js's
+   onPointerDown/onPointerMove/onPointerUp — not the CSS-only `:active`
+   pseudo-class, which iOS Safari won't reliably apply without a
+   `touchstart` listener present on the element (a long-standing WebKit
+   quirk), so a JS-driven class is the only way to guarantee this shows
+   up the same way on every touch browser. Scoped to `.building-frame`
+   itself, not `.building-face` — that keeps it fully independent of the
+   frontal/angled crossfade and the is-prev/is-next mirroring above (an
+   ordinary nested-transform stack, not a shared property), so this can
+   change without touching any of that. Applies to whichever building
+   the pointer went down on, active or peeking, since both are valid tap
+   targets (open the modal / re-center). Short duration (140ms, set on
+   .building-frame's own `transition` above) is deliberately quicker
+   than the 340ms crossfade/carousel transitions elsewhere, matching a
+   typical mobile "press" feel. */
+.building-frame.is-pressed {
+  transform: scale(0.94);
+  filter: brightness(1.12);
+}
+
+/* ---------- Prev/next arrows ---------- */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(13, 13, 13, 0.38);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.carousel-arrow:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+.carousel-arrow--prev { left: 6px; }
+.carousel-arrow--next { right: 6px; }
+
+/* ---------- Pagination dots ----------
+   The carousel band runs edge-to-edge down to the exact seam with the
+   ground layer (zero gap, by design — see above), so there is no free
+   sliver of empty space between buildings and plaza to put a dots row
+   in. Anchored just *below* the seam instead, over the hedge portion of
+   the ground layer's own artwork (z-index above `.mobile-plaza`) —
+   enough visual contrast there against the buildings' own busy facades. */
+.carousel-dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* background-cropped.png (the ground-layer source, rendered 1:1 at
+     .mobile-plaza's fixed 440×442 box) has ~10px of fully transparent
+     padding above its opaque content, so the old 520px (only 6px below
+     the 514px seam) landed the dots row in that transparent strip —
+     visually ambiguous, neither clearly on the hedge nor clearly on a
+     building, which read as "lost at the seam". The hedge itself only
+     becomes fully opaque and solid-green all the way across the dots'
+     ~108px width (they're centered, x166–274 of 440) from image-relative
+     y≈12 to y≈37 (screen 526–551) — below y≈38 a central staircase and
+     two flanking planter curbs cut into that same width, so a row
+     placed there is partly on hedge and partly on cream stairs/curb,
+     confirmed by headless screenshot at the 555–575px range this was
+     first tried against (measurably worse than a value inside 526–551,
+     not just a style preference). At the dots row's real rendered
+     height (7px, not the 18px the active dot's *width* grows to), 540px
+     centers the row at image-y 26–33 — comfortably inside the clean
+     band, ~4px of margin above the staircase lip and none of the
+     transparent strip above. */
+  top: 540px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.carousel-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: width 200ms ease, border-radius 200ms ease, background 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.carousel-dot.is-active {
+  width: 18px;
+  border-radius: 4px;
+  background: var(--gold-bright);
+}
+
+.carousel-dot:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+/* ---------- Ground layer (hedge + plaza) + fountain ----------
+   Static — never move or scale with the carousel above them. Positioned
+   via bottom:0 so its top edge stays fixed at 514px (956 - 442)
+   regardless of the carousel's own top — z-index 2 keeps it painted
+   above `.carousel` (z-index 1) on purpose, so the ~20px the carousel
+   was sunk by above (top: 254px -> 274px) lands the bottom of each
+   building under this layer's top edge instead of stopping exactly at
+   the old seam — buildings now read as planted in the hedge line,
+   matching the reference mockup, rather than floating just above it. */
+.mobile-plaza {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* True size of mobile/assets/background-cropped.png at .screen's fixed
+     440px width — see the layered-scene comment above. Not a percentage:
+     this asset is shown at its real, undistorted aspect ratio. */
+  height: 442px;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mobile-plaza__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center top;
+}
+
+.mobile-fountain {
+  position: absolute;
+  left: 50%;
+  bottom: 20%;
+  width: 80%;
+  z-index: 3;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.mobile-fountain__image {
+  display: block;
+  width: 100%;
+  height: auto;
+}

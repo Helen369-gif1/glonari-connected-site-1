@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    // Reverse device gate (2026-08-25, later still — see
+    // DEVELOPMENT_PLAN.md Stage 14 / PRODUCT_REQUIREMENTS.md §19 for the
+    // full decision writeup). The forward gate in the desktop
+    // `index.html` sends narrow viewports here; this had no matching
+    // reverse check at all, a known, disclosed gap. Deliberately NOT
+    // keyed on viewport width alone, though — a phone rotated to
+    // landscape can easily exceed 767px, and must NOT be sent to the
+    // desktop scene on that basis: desktop's mouse-hover/parallax model
+    // has no touch equivalent (this project decided mobile itself gets
+    // no movement/hover equivalent, which is a separate question from
+    // whether desktop's own model works on a touchscreen — it doesn't).
+    // Gated on width AND `(hover: hover) and (pointer: fine)` — the same
+    // primary-input media features this project's own desktop `main.js`
+    // already uses for its cursor decision (`finePointerQuery`), reused
+    // here for consistency rather than introducing a second detection
+    // philosophy for the same underlying question ("is this a
+    // mouse-driven device"). A touch-primary device never matches this,
+    // landscape or not, regardless of width — only a genuine
+    // mouse/trackpad-driven wide window redirects, which rescues the
+    // one real gap this leaves open: a desktop user loading this page
+    // (directly, or via the forward gate) with a narrow BROWSER WINDOW,
+    // then widening it without a reload.
+    //
+    // Known, accepted imprecision (same tradeoff `finePointerQuery`
+    // already carries on desktop): `pointer`/`hover` reflect the
+    // PRIMARY input, so a touch+mouse hybrid device (e.g. a 2-in-1
+    // laptop used via its touchscreen) can still match if its primary
+    // input is classified as mouse/trackpad — not solved here, consistent
+    // with how the existing desktop gate already treats that ambiguity.
+    //
+    // Checked once synchronously on load (mirroring the forward gate,
+    // and closing the "deep-links directly into mobile/index.html stays
+    // there" gap) AND live via the same 'change'-event + debounce pattern
+    // as the forward gate, so a rotation/resize after load is caught too.
+    var desktopQuery = window.matchMedia('(min-width: 768px) and (hover: hover) and (pointer: fine)');
+
+    function goDesktop() {
+      window.location.replace('../index.html');
+    }
+
+    if (desktopQuery.matches) {
+      goDesktop();
+    } else {
+      var pendingDesktopRedirect = null;
+      desktopQuery.addEventListener('change', function (event) {
+        if (pendingDesktopRedirect) {
+          clearTimeout(pendingDesktopRedirect);
+          pendingDesktopRedirect = null;
+        }
+        if (!event.matches) return;
+        pendingDesktopRedirect = setTimeout(function () {
+          if (desktopQuery.matches) {
+            // One-shot marker consumed by desktop index.html's own inline
+            // <head> script — this call site is the LIVE resize/orientation
+            // redirect, not the initial synchronous check above, so the
+            // destination page must not replay the branded intro (see
+            // intro.js). Set immediately before the existing goDesktop()
+            // call; goDesktop() itself and the redirect criteria are
+            // unchanged.
+            sessionStorage.setItem('glonariSkipIntro', '1');
+            goDesktop();
+          }
+        }, 300);
+      });
+    }
+  </script>
+  <script>
+    // Branded intro one-shot marker (see intro.js/intro.css): consumed
+    // here, once, so only the automatic live-redirect above (the only
+    // call site that sets it) suppresses the intro on its destination
+    // page. A normal load, a manual reload, or a redirect from the
+    // initial synchronous check further up never has this marker set, so
+    // they always show it.
+    if (sessionStorage.getItem('glonariSkipIntro')) {
+      sessionStorage.removeItem('glonariSkipIntro');
+    } else {
+      document.documentElement.classList.add('intro-active');
+    }
+  </script>
+  <title>Glonari — Global</title>
+  <link rel="stylesheet" href="../design-tokens.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="../section-modal.css" />
+  <link rel="stylesheet" href="../intro.css" />
+</head>
+<body>
+  <!-- Branded intro overlay: shared markup/behavior with desktop
+       index.html — see intro.css/intro.js. Sits above the Campus (and its
+       own #modal-overlay) while active; fully removed from the DOM on
+       exit. -->
+  <div id="intro-overlay" aria-hidden="true">
+    <div class="intro-circle" id="intro-circle"></div>
+    <div class="intro-text" id="intro-text">
+      <p class="intro-welcome">WELCOME TO</p>
+      <p class="intro-brand">GLONARI</p>
+    </div>
+  </div>
+
+  <!-- Mobile scene, carousel rebuild (2026-08-23, later same day) — full
+       rewrite of the earlier layered-but-static build (plain
+       horizontally-scrollable strip, no active/center concept). Per the
+       reference mockup, this version is a real looping carousel: one
+       centered/active building, its immediate neighbors peeking at the
+       screen edges, prev/next arrows, 7 pagination dots, and drag/swipe
+       paging (mobile/main.js) — not native `overflow-x` list scrolling.
+       Ground-layer asset is now assets/background.png (autocropped once
+       to mobile/assets/background-cropped.png), NOT assets/plaza.png —
+       plaza.png has a fountain baked into its own artwork, which would
+       double up against the separate assets/fountain.png layer below.
+       Buildings still use only the "* frontal.png" sources (pre-cropped
+       under mobile/assets/buildings/, unchanged from the prior pass) —
+       side/¾-angle imagery for non-active positions is an explicitly
+       deferred follow-up, not part of this rebuild. Tapping a side
+       building re-centers the carousel on it; tapping the already-active
+       (centered) building is intentionally a no-op for now — modal
+       wiring (#modal-overlay/#modal-card below, shared section-modal.js)
+       is also an explicitly deferred follow-up, so the markup/script
+       stay in place but nothing currently drives them from a tap.
+
+       (2026-08-23, later still) This exact markup was accidentally
+       reverted to the pre-carousel flat-list version at one point and
+       has been restored here — see styles.css for the accompanying
+       scaling fixes (building/ground-layer/fountain proportions) applied
+       in the same pass. -->
+  <main class="screen" aria-label="Glonari Global — mobile scene">
+    <div class="mobile-sky">
+      <picture>
+        <source type="image/webp" srcset="../assets/sky.webp" />
+        <img src="../assets/sky.png" alt="" class="mobile-sky__image" width="2172" height="724" />
+      </picture>
+    </div>
+
+    <div class="carousel" id="carousel">
+      <button class="carousel-arrow carousel-arrow--prev" type="button" aria-label="Previous building">‹</button>
+
+      <div class="carousel-viewport">
+        <div class="carousel-track" id="carousel-track">
+          <!-- Clone of the last real slide (Pulse), prepended, so the
+               carousel can loop seamlessly to the left past Persona.
+               Peeking at the left edge on load, so both faces load eager. -->
+          <div class="building-frame building-pulse" data-clone="true" aria-hidden="true" tabindex="-1">
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/pulse-frontal-cropped.webp" />
+              <img class="building-face building-face--frontal" src="assets/buildings/pulse-frontal-cropped.png" alt="" width="690" height="780" />
+            </picture>
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/pulse-angled.webp" />
+              <img class="building-face building-face--angled" src="assets/buildings/pulse-angled.png" alt="" width="690" height="780" />
+            </picture>
+          </div>
+
+          <!-- Active (centered) slide on load — both faces load eager. -->
+          <div class="building-frame building-persona" data-building="building-persona" tabindex="0" role="button" aria-label="Signature Persona Pavilion — open section">
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/persona-frontal-cropped.webp" />
+              <img class="building-face building-face--frontal" src="assets/buildings/persona-frontal-cropped.png" alt="Signature Persona Pavilion building" width="690" height="780" />
+            </picture>
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/persona-angled.webp" />
+              <img class="building-face building-face--angled" src="assets/buildings/persona-angled.png" alt="" width="690" height="780" />
+            </picture>
+          </div>
+
+          <!-- Peeking at the right edge on load, so both faces load eager. -->
+          <div class="building-frame building-banker" data-building="building-banker" tabindex="0" role="button" aria-label="Digital Banker — open section">
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/banker-frontal-cropped.webp" />
+              <img class="building-face building-face--frontal" src="assets/buildings/banker-frontal-cropped.png" alt="Digital Banker building" width="690" height="780" />
+            </picture>
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/banker-angled.webp" />
+              <img class="building-face building-face--angled" src="assets/buildings/banker-angled.png" alt="" width="690" height="780" />
+            </picture>
+          </div>
+
+          <!-- Not visible until the carousel is dragged/paged to it — lazy. -->
+          <div class="building-frame building-global-connections" data-building="building-global-connections" tabindex="0" role="button" aria-label="Global Connections — open section">
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/global-connections-frontal-cropped.webp" />
+              <img class="building-face building-face--frontal" src="assets/buildings/global-connections-frontal-cropped.png" alt="Global Connections building" width="690" height="780" loading="lazy" />
+            </picture>
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/global-connections-angled.webp" />
+              <img class="building-face building-face--angled" src="assets/buildings/global-connections-angled.png" alt="" width="690" height="780" loading="lazy" />
+            </picture>
+          </div>
+
+          <div class="building-frame building-global-dream" data-building="building-global-dream" tabindex="0" role="button" aria-label="Global Dream — open section">
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/global-dream-frontal-cropped.webp" />
+              <img class="building-face building-face--frontal" src="assets/buildings/global-dream-frontal-cropped.png" alt="Global Dream building" width="690" height="780" loading="lazy" />
+            </picture>
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/global-dream-angled.webp" />
+              <img class="building-face building-face--angled" src="assets/buildings/global-dream-angled.png" alt="" width="690" height="780" loading="lazy" />
+            </picture>
+          </div>
+
+          <div class="building-frame building-glonari-ancillary" data-building="building-glonari-ancillary" tabindex="0" role="button" aria-label="Glonari Ancillary — open section">
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/glonari-ancillary-frontal-cropped.webp" />
+              <img class="building-face building-face--frontal" src="assets/buildings/glonari-ancillary-frontal-cropped.png" alt="Glonari Ancillary building" width="690" height="780" loading="lazy" />
+            </picture>
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/glonari-ancillary-angled.webp" />
+              <img class="building-face building-face--angled" src="assets/buildings/glonari-ancillary-angled.png" alt="" width="690" height="780" loading="lazy" />
+            </picture>
+          </div>
+
+          <div class="building-frame building-glonari-news" data-building="building-glonari-news" tabindex="0" role="button" aria-label="Glonari News — open section">
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/glonari-news-frontal-cropped.webp" />
+              <img class="building-face building-face--frontal" src="assets/buildings/glonari-news-frontal-cropped.png" alt="Glonari News building" width="690" height="780" loading="lazy" />
+            </picture>
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/glonari-news-angled.webp" />
+              <img class="building-face building-face--angled" src="assets/buildings/glonari-news-angled.png" alt="" width="690" height="780" loading="lazy" />
+            </picture>
+          </div>
+
+          <div class="building-frame building-pulse" data-building="building-pulse" tabindex="0" role="button" aria-label="Glonari Pulse — open section">
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/pulse-frontal-cropped.webp" />
+              <img class="building-face building-face--frontal" src="assets/buildings/pulse-frontal-cropped.png" alt="Glonari Pulse building" width="690" height="780" loading="lazy" />
+            </picture>
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/pulse-angled.webp" />
+              <img class="building-face building-face--angled" src="assets/buildings/pulse-angled.png" alt="" width="690" height="780" loading="lazy" />
+            </picture>
+          </div>
+
+          <!-- Clone of the first real slide (Persona), appended, so the
+               carousel can loop seamlessly to the right past Pulse. Not
+               visible on load (only reachable after paging all the way
+               around) — lazy. -->
+          <div class="building-frame building-persona" data-clone="true" aria-hidden="true" tabindex="-1">
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/persona-frontal-cropped.webp" />
+              <img class="building-face building-face--frontal" src="assets/buildings/persona-frontal-cropped.png" alt="" width="690" height="780" loading="lazy" />
+            </picture>
+            <picture>
+              <source type="image/webp" srcset="assets/buildings/persona-angled.webp" />
+              <img class="building-face building-face--angled" src="assets/buildings/persona-angled.png" alt="" width="690" height="780" loading="lazy" />
+            </picture>
+          </div>
+        </div>
+      </div>
+
+      <button class="carousel-arrow carousel-arrow--next" type="button" aria-label="Next building">›</button>
+    </div>
+
+    <div class="carousel-dots" id="carousel-dots">
+      <button class="carousel-dot" type="button" data-index="0" aria-label="Signature Persona Pavilion"></button>
+      <button class="carousel-dot" type="button" data-index="1" aria-label="Digital Banker"></button>
+      <button class="carousel-dot" type="button" data-index="2" aria-label="Global Connections"></button>
+      <button class="carousel-dot" type="button" data-index="3" aria-label="Global Dream"></button>
+      <button class="carousel-dot" type="button" data-index="4" aria-label="Glonari Ancillary"></button>
+      <button class="carousel-dot" type="button" data-index="5" aria-label="Glonari News"></button>
+      <button class="carousel-dot" type="button" data-index="6" aria-label="Glonari Pulse"></button>
+    </div>
+
+    <div class="mobile-plaza">
+      <picture>
+        <source type="image/webp" srcset="assets/background-cropped.webp" />
+        <img src="assets/background-cropped.png" alt="" class="mobile-plaza__image" width="440" height="442" />
+      </picture>
+    </div>
+
+    <div class="mobile-fountain">
+      <picture>
+        <source type="image/webp" srcset="../assets/fountain.webp" />
+        <img src="../assets/fountain.png" alt="Glonari globe fountain" class="mobile-fountain__image" width="379" height="202" />
+      </picture>
+    </div>
+  </main>
+
+  <!-- Same #modal-overlay/#modal-card markup as desktop's index.html —
+       required as-is by the shared section-modal.js/section-modal.css.
+       Not wired to any tap yet in this pass (see main.js). -->
+  <div id="modal-overlay">
+    <div id="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-desc">
+      <h2 id="modal-title"></h2>
+      <p id="modal-desc"></p>
+      <button id="modal-close" type="button">Close</button>
+    </div>
+  </div>
+
+  <script src="../intro.js" defer></script>
+  <script src="../section-modal.js" defer></script>
+  <script src="main.js" defer></script>
+</body>
+</html>

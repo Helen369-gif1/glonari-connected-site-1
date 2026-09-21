@@ -1,0 +1,735 @@
+/* ── Screen 5.5 — Reserve Hologram in the Vault (Build Spec Section 5.5a) ──
+   Design-system exception (see GLOBAL-RESERVE-DESIGN-SYSTEM.md): the panel
+   below is a near-literal transplant of
+   references/reserve-hologram-panel-source/ — its exact geometry (1920x1080
+   scene, panel at 400/206/1119x599, etc.), Roboto 400/500/600, and colors.
+   This is the ONLY place on the page that uses Roboto or these coordinates;
+   everything else keeps the standard Global Reserve design system.
+
+   Desktop composition: one absolutely-positioned "stage" sized exactly
+   1920x1080, scaled as a whole with a "cover" formula (see
+   js/reserve-hologram.js) so the background photo, the panel, and the
+   projection beam all crop and scale together and stay pixel-locked to
+   each other, the same way a single cover-fit video would. Below 960px the
+   stage is abandoned in favor of a separate, genuinely responsive stacked
+   layout (Section 12 of the current task) — this project's usual single
+   768px breakpoint isn't used for this one section because the pixel-locked
+   stage would otherwise blow up the panel at in-between "short desktop"
+   viewports (see the 802x664 case in the task notes).
+
+   Elements that reveal on scroll start from a hidden CSS default (opacity /
+   transform) so there's no flash of a fully assembled panel before the
+   script runs, matching the .word{opacity:0} pattern already used for
+   Screen 1 and Screen 4.5. Once assembled, nothing fades back out — the
+   composition holds until the sticky pin itself releases. */
+
+#screen-5-5 {
+  --rh-blue: #82c0fa;
+  --rh-bronze: #f8c47b;
+  --rh-eyebrow: #f7c37b;
+  --rh-secondary: #8da3b9;
+  --rh-white: #ffffff;
+  --rh-disc: #09213e;
+  position: relative;
+}
+
+.reserve-hologram__wrapper {
+  height: 420vh;
+  position: relative;
+}
+
+.reserve-hologram__sticky {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--gr-void);
+  /* Only affects the mobile/tablet layout below 960px, where the stage
+     switches to position:static and needs centering: the desktop stage is
+     always position:absolute, which flex alignment has no effect on. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Background ── */
+
+.reserve-hologram__bg {
+  position: absolute;
+  inset: 0;
+}
+
+.reserve-hologram__bg-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Stage: the exact 1920x1080 scene, scaled as one unit ── */
+
+.reserve-hologram__stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: 50% 50%;
+}
+
+/* ── Panel: exact source coordinates (400, 206, 1119x599) ── */
+
+.reserve-hologram__panel {
+  position: absolute;
+  left: 400px;
+  top: 206px;
+  width: 1119px;
+  height: 599px;
+  opacity: 0;
+  transform: translateY(22px);
+  transform-origin: 50% 100%;
+}
+
+.reserve-hologram__panel-bg {
+  position: absolute;
+  inset: 0;
+}
+
+.reserve-hologram__panel-bg-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  border: 3px solid var(--rh-blue);
+  filter: drop-shadow(0 0 25.202px #ffffff) drop-shadow(0 0 14.401px #ffffff) drop-shadow(0 0 8.401px #ffffff)
+    drop-shadow(0 0 4.2px #ffffff) drop-shadow(0 0 1.2px #ffffff) drop-shadow(0 0 0.6px #ffffff);
+}
+
+.reserve-hologram__panel-bg-gradient {
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  border: 3px solid var(--rh-blue);
+  background-image: url('../media/reserve-hologram/panel-gradient-bg.svg');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.reserve-hologram__panel-clip {
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.reserve-hologram__panel-container {
+  position: absolute;
+  left: 67px;
+  top: 25px;
+  width: 1028px;
+  height: 554px;
+}
+
+/* ── Header block (60, 0, 865x134) ── */
+
+.reserve-hologram__header-block {
+  position: absolute;
+  left: 60px;
+  top: 0;
+  width: 865px;
+  height: 134px;
+}
+
+.reserve-hologram__header-elements {
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 865px;
+  height: 1px;
+  opacity: 0;
+}
+
+.reserve-hologram__header-lines-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.reserve-hologram__header-inner {
+  position: absolute;
+  left: 166px;
+  top: 0;
+  width: 517px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.reserve-hologram__eyebrow {
+  margin: 0;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 4.14px;
+  color: var(--rh-eyebrow);
+  width: 100%;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.reserve-hologram__header-text {
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.reserve-hologram__heading {
+  margin: 0;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 500;
+  font-size: 48px;
+  color: var(--rh-white);
+  width: 100%;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.reserve-hologram__disclaimer {
+  margin: 0;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  color: var(--rh-secondary);
+  width: 100%;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+/* ── General section (0, 147, 1028x340) ── */
+
+.reserve-hologram__general-section {
+  position: absolute;
+  left: 0;
+  top: 147px;
+  width: 1028px;
+  height: 340px;
+}
+
+.reserve-hologram__left-states {
+  position: absolute;
+  left: 19px;
+  top: 18px;
+  width: 241px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 56px;
+}
+
+.reserve-hologram__right-states {
+  position: absolute;
+  left: 733px;
+  top: 18px;
+  width: 295px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 33px;
+}
+
+.reserve-hologram__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.reserve-hologram__stat-label {
+  margin: 0;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 500;
+  font-size: 26px;
+  line-height: 1.5;
+  color: var(--rh-white);
+}
+
+.reserve-hologram__stat-value {
+  margin: 0;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 500;
+  font-size: 44px;
+  line-height: 1.5;
+  color: var(--rh-bronze);
+  white-space: nowrap;
+}
+
+.reserve-hologram__stat-caption {
+  margin: 0;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: normal;
+  color: var(--rh-secondary);
+}
+
+.reserve-hologram__stat-caption--narrow {
+  width: 229px;
+}
+
+/* ── Progress ring (331, 0, 331x332) ──
+   The image is the exact source asset (disc + outer glow + the 82% gold
+   arc, all baked together). It's revealed by sweeping a conic-gradient
+   mask around it (updated every scroll frame from JS) rather than redrawn
+   or substituted — the fully-revealed state is pixel-identical to the
+   source file. The container also gets its own small opacity/scale
+   entrance, as the task permits. */
+
+.reserve-hologram__ring {
+  position: absolute;
+  left: 331px;
+  top: 0;
+  width: 331px;
+  height: 332px;
+  opacity: 0;
+  transform: scale(0.94);
+}
+
+.reserve-hologram__ring-circle {
+  position: absolute;
+  inset: 0;
+  width: 331px;
+  height: 332px;
+}
+
+.reserve-hologram__ring-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  --rh-ring-sweep: 0deg;
+  -webkit-mask-image: conic-gradient(from 0deg, #000 0deg, #000 var(--rh-ring-sweep), transparent var(--rh-ring-sweep));
+  mask-image: conic-gradient(from 0deg, #000 0deg, #000 var(--rh-ring-sweep), transparent var(--rh-ring-sweep));
+}
+
+.reserve-hologram__ring-text {
+  position: absolute;
+  left: 81px;
+  top: 101px;
+  width: 169px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.reserve-hologram__ring-percent {
+  margin: 0;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 500;
+  font-size: 90px;
+  line-height: 1;
+  color: var(--rh-bronze);
+  width: 100%;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.reserve-hologram__ring-label {
+  margin: 0;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 500;
+  font-size: 26px;
+  line-height: 1.5;
+  color: var(--rh-white);
+  width: 100%;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* ── Decorative dividers (288 x 338) ── */
+
+.reserve-hologram__divider {
+  position: absolute;
+  top: 1.5px;
+  width: 287.5px;
+  height: 338px;
+  opacity: 0;
+}
+
+.reserve-hologram__divider--left {
+  left: 0;
+}
+
+.reserve-hologram__divider--right {
+  left: 985.5px;
+  transform: scaleX(-1);
+}
+
+.reserve-hologram__divider-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Footer (398, 500, 189x54, relative to the container) ── */
+
+.reserve-hologram__footer {
+  position: absolute;
+  left: 398px;
+  top: 500px;
+  width: 189px;
+  height: 54px;
+  opacity: 0;
+}
+
+.reserve-hologram__footer-text {
+  margin: 0;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--rh-secondary);
+  text-align: center;
+  width: 100%;
+}
+
+.reserve-hologram__footer-underline-img {
+  display: block;
+  position: absolute;
+  left: 6px;
+  top: 41px;
+  width: 176.5px;
+  height: 13px;
+}
+
+/* ── Beam: a wide projection cone narrowing down to the projector ──
+   Positioned in the same 1920x1080 stage space as the panel, so it scales
+   and crops in lockstep with it and with the background photo. Wide top
+   at the panel's underside (roughly 770-1150 across, y=805), narrowing to
+   a point at the projector baked into the background at (960, 895). */
+
+.reserve-hologram__beam {
+  position: absolute;
+  left: 770px;
+  top: 805px;
+  width: 380px;
+  height: 90px;
+  opacity: 0;
+}
+
+.reserve-hologram__beam-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.reserve-hologram__beam-edge {
+  stroke: var(--rh-blue);
+  stroke-width: 2;
+  stroke-opacity: 0.65;
+}
+
+.reserve-hologram__base-glow {
+  position: absolute;
+  left: 960px;
+  top: 895px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.reserve-hologram__floor-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 220px;
+  height: 46px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(130, 192, 250, 0.35), rgba(130, 192, 250, 0));
+  filter: blur(6px);
+}
+
+.reserve-hologram__base-bloom {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70px;
+  height: 70px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.92), rgba(130, 192, 250, 0.55) 45%, rgba(130, 192, 250, 0) 75%);
+}
+
+/* ── Responsive: 960px and below ──
+   A separate, genuinely adaptive layout (not a scaled-down copy of the
+   1920px stage): the stage transform is dropped, the panel becomes a
+   normal flow box, and the general section becomes a grid so the ring can
+   sit above the four summaries with the required Ready, Reserved,
+   Scheduled, Committed order — two columns down to 600px, one column
+   below it. Roboto and the exact source colors are kept; only sizes and
+   positioning change. */
+
+@media (max-width: 960px) {
+  .reserve-hologram__sticky {
+    padding-inline: 20px;
+  }
+
+  .reserve-hologram__stage {
+    position: static;
+    width: 100%;
+    height: auto;
+    transform: none !important;
+  }
+
+  .reserve-hologram__beam,
+  .reserve-hologram__base-glow {
+    display: none;
+  }
+
+  .reserve-hologram__panel {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+    margin-inline: auto;
+  }
+
+  /* .panel-clip stays position:absolute at desktop (it only needs to clip
+     the corners of the fixed 599px-tall panel). At mobile the panel's
+     height is auto, so its content must be in normal flow to actually
+     establish that height — an absolutely-positioned child never does. */
+  .reserve-hologram__panel-clip {
+    position: relative;
+    inset: auto;
+  }
+
+  .reserve-hologram__panel-bg-glow {
+    filter: drop-shadow(0 0 12px #ffffff) drop-shadow(0 0 7px #ffffff) drop-shadow(0 0 4px #ffffff)
+      drop-shadow(0 0 2px #ffffff);
+  }
+
+  .reserve-hologram__panel-container {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: auto;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 18px 18px;
+    gap: 14px;
+  }
+
+  .reserve-hologram__header-block {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    height: auto;
+  }
+
+  .reserve-hologram__header-elements {
+    display: none;
+  }
+
+  .reserve-hologram__header-inner {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+  }
+
+  .reserve-hologram__eyebrow {
+    font-size: 12px;
+    letter-spacing: 2.6px;
+  }
+
+  .reserve-hologram__heading {
+    font-size: clamp(20px, 6vw, 26px);
+  }
+
+  .reserve-hologram__disclaimer {
+    font-size: 13px;
+  }
+
+  .reserve-hologram__general-section {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    height: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'ring ring'
+      'ready reserved'
+      'scheduled committed';
+    row-gap: 14px;
+    column-gap: 16px;
+    align-items: start;
+    justify-items: center;
+  }
+
+  .reserve-hologram__left-states,
+  .reserve-hologram__right-states {
+    position: static;
+    display: contents;
+  }
+
+  .reserve-hologram__stat {
+    align-items: center;
+    text-align: center;
+  }
+
+  .reserve-hologram__stat[data-state='ready'] {
+    grid-area: ready;
+  }
+  .reserve-hologram__stat[data-state='reserved'] {
+    grid-area: reserved;
+  }
+  .reserve-hologram__stat[data-state='scheduled'] {
+    grid-area: scheduled;
+  }
+  .reserve-hologram__stat[data-state='committed'] {
+    grid-area: committed;
+  }
+
+  .reserve-hologram__stat-label {
+    font-size: 14px;
+  }
+
+  .reserve-hologram__stat-value {
+    font-size: clamp(20px, 6vw, 26px);
+    white-space: normal;
+  }
+
+  .reserve-hologram__stat-caption {
+    font-size: 12px;
+  }
+
+  .reserve-hologram__stat-caption--narrow {
+    width: auto;
+    max-width: 200px;
+  }
+
+  .reserve-hologram__ring {
+    grid-area: ring;
+    position: relative;
+    left: auto;
+    top: auto;
+    width: clamp(130px, 34vw, 200px);
+    height: auto;
+    aspect-ratio: 331 / 332;
+    margin-inline: auto;
+  }
+
+  .reserve-hologram__ring-circle {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .reserve-hologram__ring-text {
+    left: 50%;
+    top: 50%;
+    width: auto;
+    transform: translate(-50%, -50%);
+  }
+
+  .reserve-hologram__ring-percent {
+    font-size: clamp(28px, 10vw, 38px);
+  }
+
+  .reserve-hologram__ring-label {
+    font-size: 14px;
+  }
+
+  .reserve-hologram__divider {
+    display: none;
+  }
+
+  .reserve-hologram__footer {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    height: auto;
+    text-align: center;
+  }
+
+  .reserve-hologram__footer-text {
+    font-size: 13px;
+  }
+
+  .reserve-hologram__footer-underline-img {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 120px;
+    height: 9px;
+    margin: 6px auto 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .reserve-hologram__general-section {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'ring'
+      'ready'
+      'reserved'
+      'scheduled'
+      'committed';
+  }
+}
+
+/* ── Reduced motion: static fallback (JS also sets the same hold state) ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .reserve-hologram__wrapper {
+    height: auto;
+  }
+
+  .reserve-hologram__sticky {
+    /* position:relative (not static) — it must stay the containing block
+       for the absolutely-positioned desktop stage; only the sticky/pin
+       behavior itself needs to go. */
+    position: relative;
+    height: 100svh;
+    overflow: hidden;
+  }
+
+  .reserve-hologram__panel,
+  .reserve-hologram__header-elements,
+  .reserve-hologram__eyebrow,
+  .reserve-hologram__heading,
+  .reserve-hologram__disclaimer,
+  .reserve-hologram__divider,
+  .reserve-hologram__stat,
+  .reserve-hologram__ring,
+  .reserve-hologram__ring-percent,
+  .reserve-hologram__ring-label,
+  .reserve-hologram__beam,
+  .reserve-hologram__base-glow,
+  .reserve-hologram__footer {
+    opacity: 1;
+    transform: none;
+  }
+
+  .reserve-hologram__divider--right {
+    transform: scaleX(-1);
+  }
+
+  .reserve-hologram__ring-img {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}

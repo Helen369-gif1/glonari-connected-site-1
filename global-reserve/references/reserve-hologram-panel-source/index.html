@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Reserve — Hologram Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="stage-outer">
+  <div class="stage" id="stage">
+    <section class="hologram-panel" data-name="Hologram_Panel_Desktop">
+
+      <!-- background -->
+      <div class="panel-bg" data-name="background">
+        <div class="panel-bg-glow" data-name="Rectangle 34626156"></div>
+        <div class="panel-bg-gradient" data-name="Rectangle 34626155"></div>
+      </div>
+
+      <!-- контентный слой обрезается по форме скруглённой панели, как в Figma -->
+      <div class="panel-clip">
+      <!-- container -->
+      <div class="panel-container" data-name="container">
+
+        <!-- header block -->
+        <header class="header-block" data-name="header block">
+          <div class="header-elements" data-name="elements">
+            <img src="assets/header-lines.svg" alt="" class="header-lines-img">
+          </div>
+          <div class="header-inner" data-name="header block">
+            <p class="header-eyebrow" data-name="GLOBAL RESERVE">GLOBAL RESERVE</p>
+            <div class="header-text" data-name="text">
+              <p class="header-title" data-name="Your reserve at a glance">Your reserve at a glance</p>
+              <p class="header-subtitle" data-name="Example interface — not your account.">Example interface — not your account.</p>
+            </div>
+          </div>
+        </header>
+
+        <!-- General Section -->
+        <div class="general-section" data-name="General Section">
+
+          <!-- Left states -->
+          <div class="left-states" data-name="Left_States">
+            <div class="stat-block" data-name="блок текст 1">
+              <p class="stat-label" data-name="Ready">Ready</p>
+              <p class="stat-value" data-name="$42,800">$42,800</p>
+              <p class="stat-caption" data-name="Free to use today">Free to use today</p>
+            </div>
+            <div class="stat-block" data-name="блок текст 2">
+              <p class="stat-label" data-name="Scheduled">Scheduled</p>
+              <p class="stat-value" data-name="90 days">90 days</p>
+              <p class="stat-caption" data-name="Arriving on its own timeline">Arriving on its own timeline</p>
+            </div>
+          </div>
+
+          <!-- Progress ring -->
+          <div class="progress-ring" data-name="Progress ring">
+            <div class="progress-ring-circle" data-name="круг">
+              <img src="assets/progress-ring.svg" alt="82% ready progress ring" class="progress-ring-img">
+            </div>
+            <div class="progress-ring-text" data-name="текст">
+              <p class="progress-percent" data-name="82%">82%</p>
+              <p class="progress-label" data-name="Ready">Ready</p>
+            </div>
+          </div>
+
+          <!-- Right states -->
+          <div class="right-states" data-name="Right_States">
+            <div class="stat-block" data-name="блок текст 3">
+              <p class="stat-label" data-name="Reserved">Reserved</p>
+              <p class="stat-value" data-name="$18,000">$18,000</p>
+              <p class="stat-caption" data-name="Holding a home you already have">Holding a home you already have</p>
+            </div>
+            <div class="stat-block" data-name="блок текст 4">
+              <p class="stat-label" data-name="Committed">Committed</p>
+              <p class="stat-value" data-name="78%">78%</p>
+              <p class="stat-caption stat-caption--narrow" data-name="Toward a property you're working on">Toward a property you're<br>working on</p>
+            </div>
+          </div>
+
+          <!-- decorative dividers -->
+          <div class="divider-elements divider-elements--left" data-name="элементы">
+            <img src="assets/divider-lines.svg" alt="" class="divider-lines-img">
+          </div>
+          <div class="divider-elements divider-elements--right" data-name="элементы">
+            <img src="assets/divider-lines.svg" alt="" class="divider-lines-img">
+          </div>
+
+        </div>
+
+        <!-- footer -->
+        <footer class="panel-footer" data-name="footer">
+          <p class="footer-text" data-name="Explore the example">Explore the example</p>
+          <img src="assets/footer-underline.svg" alt="" class="footer-underline-img">
+        </footer>
+
+      </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+  // Device gate (PRODUCT_REQUIREMENTS.md §19 / DEVELOPMENT_PLAN.md
+  // Stage 14): this desktop scene and mobile/index.html's static tap-zone
+  // scene are two independent entry points with no shared layout — a
+  // narrow/portrait viewport must never load this page's parallax scene
+  // at all, not just render it awkwardly. Runs synchronously, as the
+  // very first thing after <meta viewport> (so the media query already
+  // sees the real device width, not a pre-viewport-meta default) and
+  // before any stylesheet/asset below is requested, so a phone-sized
+  // viewport never fetches this page's desktop assets before leaving.
+  // 767px matches this project's own established mobile breakpoint (see
+  // Stage 14's history). .replace(), not .href, so the redirect doesn't
+  // leave a back-button entry that would just bounce the user right
+  // back here into another redirect.
+  //
+  // Live re-check (2026-08-25, later still): the one-time check above
+  // only ever runs once, at load — it never catches a viewport that
+  // narrows to mobile width AFTER this page has already loaded (a manual
+  // browser-window resize, an orientation change, or a backgrounded tab
+  // resuming at a different size), so a desktop-loaded page left open
+  // through one of those never left. `MediaQueryList`'s own 'change'
+  // event exists exactly for this — it fires only when `matches` itself
+  // flips, not on every resize tick, so it's used here instead of a
+  // manual `resize` listener; the SAME MediaQueryList object is reused
+  // for both the one-time check and this listener, rather than
+  // constructing a second one for the same query.
+  var mobileQuery = window.matchMedia('(max-width: 767px)');
+
+  function goMobile() {
+    window.location.replace('mobile/index.html');
+  }
+
+  if (mobileQuery.matches) {
+    goMobile();
+  } else {
+    var pendingMobileRedirect = null;
+    mobileQuery.addEventListener('change', function (event) {
+      if (pendingMobileRedirect) {
+        clearTimeout(pendingMobileRedirect);
+        pendingMobileRedirect = null;
+      }
+      if (!event.matches) return; // only react to crossing INTO mobile width
+      // Debounced (300ms): guards against a transient/flickering match —
+      // DevTools device-emulation toggling, or the brief instant of
+      // unstable `innerWidth` some mobile browsers report mid
+      // orientation-change — by requiring the narrow state to still hold
+      // once the delay elapses, rather than acting on the very first
+      // 'change' event.
+      pendingMobileRedirect = setTimeout(function () {
+        if (mobileQuery.matches) {
+          // One-shot marker consumed by mobile/index.html's own inline
+          // <head> script — this call site is the LIVE resize/orientation
+          // redirect, not the initial synchronous check above, so the
+          // destination page must not replay the branded intro (see
+          // intro.js). Set immediately before the existing goMobile()
+          // call; goMobile() itself and the redirect criteria are
+          // unchanged.
+          sessionStorage.setItem('glonariSkipIntro', '1');
+          goMobile();
+        }
+      }, 300);
+    });
+  }
+</script>
+<script>
+  // Branded intro one-shot marker (see intro.js/intro.css): consumed here,
+  // once, so only the automatic live-redirect above (the only call site
+  // that sets it) suppresses the intro on its destination page. A normal
+  // load, a manual reload, or a redirect from the initial synchronous
+  // check further up never has this marker set, so they always show it.
+  if (sessionStorage.getItem('glonariSkipIntro')) {
+    sessionStorage.removeItem('glonariSkipIntro');
+  } else {
+    document.documentElement.classList.add('intro-active');
+  }
+</script>
+<title>Glonari Global Scene</title>
+<link rel="stylesheet" href="design-tokens.css">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="section-modal.css">
+<link rel="stylesheet" href="intro.css">
+</head>
+<body>
+  <!-- Branded intro overlay: shared markup/behavior with mobile/index.html
+       — see intro.css/intro.js. Sits above the Campus (and its own
+       #modal-overlay) while active; fully removed from the DOM on exit. -->
+  <div id="intro-overlay" aria-hidden="true">
+    <div class="intro-circle" id="intro-circle"></div>
+    <div class="intro-text" id="intro-text">
+      <p class="intro-welcome">WELCOME TO</p>
+      <p class="intro-brand">GLONARI</p>
+    </div>
+  </div>
+
+  <div class="stage-viewport">
+  <div class="scene-world">
+  <div class="scene" data-name="Glonari-Global-Scene">
+
+    <div class="layer sky" data-depth="0.2">
+      <picture>
+        <source type="image/webp" srcset="assets/sky.webp">
+        <img src="assets/sky.png" alt="" class="fill cover" width="2172" height="724">
+      </picture>
+    </div>
+
+    <div class="layer building building-global-connections" data-left="2" data-width="299" tabindex="0" role="button" aria-label="Global Connections — open section">
+      <div class="building-lift">
+        <picture>
+          <source type="image/webp" srcset="assets/global-connections.webp">
+          <img src="assets/global-connections.png" alt="Global Connections building" class="fill cover" width="1122" height="1402">
+        </picture>
+      </div>
+    </div>
+
+    <div class="layer building building-glonari-news" data-left="301" data-width="258" tabindex="0" role="button" aria-label="Glonari News — open section">
+      <div class="building-lift">
+        <picture>
+          <source type="image/webp" srcset="assets/glonari-news.webp">
+          <img src="assets/glonari-news.png" alt="Glonari News building" class="fill cover" width="1122" height="1402">
+        </picture>
+      </div>
+    </div>
+
+    <div class="layer building building-pulse" data-left="535" data-width="295" tabindex="0" role="button" aria-label="Glonari Pulse — open section">
+      <div class="building-lift">
+        <picture>
+          <source type="image/webp" srcset="assets/pulse.webp">
+          <img src="assets/pulse.png" alt="Glonari Pulse building" class="fill cover" width="1209" height="1300">
+        </picture>
+      </div>
+    </div>
+
+    <div class="layer building building-persona" data-left="783" data-width="507" tabindex="0" role="button" aria-label="Signature Persona Pavilion — open section">
+      <div class="building-lift">
+        <picture>
+          <source type="image/webp" srcset="assets/persona.webp">
+          <img src="assets/persona.png" alt="Signature Persona Pavilion building" class="fill cover" width="1672" height="941">
+        </picture>
+      </div>
+    </div>
+
+    <div class="layer building building-banker" data-left="1241" data-width="349.875" tabindex="0" role="button" aria-label="Digital Banker — open section">
+      <div class="building-lift">
+        <picture>
+          <source type="image/webp" srcset="assets/banker.webp">
+          <img src="assets/banker.png" alt="Digital Banker building" class="fill cover" width="1440" height="1192">
+        </picture>
+      </div>
+    </div>
+
+    <div class="layer building building-global-dream" data-left="1563" data-width="261" tabindex="0" role="button" aria-label="Global Dream — open section">
+      <div class="building-lift">
+        <picture>
+          <source type="image/webp" srcset="assets/global-dream.webp">
+          <img src="assets/global-dream.png" alt="Global Dream building" class="fill cover" width="1122" height="1402">
+        </picture>
+      </div>
+    </div>
+
+    <div class="layer building building-glonari-ancillary" data-left="1824" data-width="227" tabindex="0" role="button" aria-label="Glonari Ancillary — open section">
+      <div class="building-lift">
+        <picture>
+          <source type="image/webp" srcset="assets/glonari-ancillary.webp">
+          <img src="assets/glonari-ancillary.png" alt="Glonari Ancillary building" class="crop-ancillary" width="1448" height="1086">
+        </picture>
+      </div>
+    </div>
+
+    <div class="layer plaza" data-depth="1.1">
+      <picture>
+        <source type="image/webp" srcset="assets/plaza.webp">
+        <img src="assets/plaza.png" alt="Plaza with Glonari globe fountain" class="crop-plaza" width="1983" height="793">
+      </picture>
+      <!-- Fountain water animation. .water-video-mask is clipped by
+           water-mask.svg to exactly the pool's donut-shaped water surface
+           (see the mask's own path) — that shape already excludes the
+           GLONARI pedestal's footprint, so the pedestal/inscription (baked
+           into plaza.png) stay fully visible with nothing extra needed to
+           keep the video "behind" them. The wrapper is sized like
+           .crop-plaza's containing box (inset:0 of .layer.plaza, the full
+           2050x799 frame — see styles.css), not to .crop-plaza's own offset
+           box, because water-mask.svg was authored against that full-frame
+           coordinate system; mask-size:100% 100% on the wrapper relies on
+           that match. The <video> inside is positioned/sized (not
+           object-fit-cropped against the full frame) to land ITS OWN
+           source footage's already-oval, already-lit fountain graphic
+           directly over the mask's pool-ring bounding box — see the
+           .water-video comment in styles.css for the source measurements
+           this is derived from. -->
+      <div class="water-video-mask" aria-hidden="true">
+        <video class="water-video" autoplay muted loop playsinline preload="auto">
+          <source src="assets/%D0%B2%D0%BE%D0%B4%D0%B0.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
+
+  </div>
+  </div>
+  </div>
+
+  <!-- Section modal: structure/style adapted from the Glonari Global
+       Campus reference (#modal-overlay/#modal-card there). Deliberately a
+       sibling of .stage-viewport, not a child of it, so it's never inside
+       the parallax-transformed .scene-world subtree and can't move with
+       the scene regardless of the pointer offset at the moment it opens. -->
+  <div id="modal-overlay">
+    <div id="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-desc">
+      <h2 id="modal-title"></h2>
+      <p id="modal-desc"></p>
+      <button id="modal-close" type="button">Close</button>
+    </div>
+  </div>
+
+  <div class="cursor-dot" aria-hidden="true"></div>
+  <div class="cursor-ring" aria-hidden="true"></div>
+
+  <!-- Cross-project navigation fade: a plain black overlay, sibling of the
+       modal/cursor above, used only when a building click leaves this page
+       entirely (currently: Digital Banker → digital-banker/gia/). Faded in
+       by main.js's navigateWithFade() right before the real page
+       navigation, so the jump to the next static site reads as one
+       continuous cut-to-black rather than a hard reload flash. Not used by
+       the in-page section modal, which has its own open/close treatment. -->
+  <div id="exit-transition" aria-hidden="true"></div>
+
+  <script src="intro.js" defer></script>
+  <script src="section-modal.js" defer></script>
+  <script src="main.js" defer></script>
+</body>
+</html>

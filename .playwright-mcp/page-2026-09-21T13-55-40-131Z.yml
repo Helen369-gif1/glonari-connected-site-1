@@ -1,0 +1,9 @@
+- main [ref=f3e2]:
+  - generic [ref=f3e3]:
+    - generic:
+      - generic:
+        - paragraph: Glonari presents
+        - heading "Welcome to Digital Banker" [level=1]
+        - paragraph: Not a banking app. Not a wallet. A space where money serves your life - not the other way around.
+    - generic [aria-hidden]:
+      - generic: Scroll

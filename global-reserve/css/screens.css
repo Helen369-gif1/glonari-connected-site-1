@@ -1,0 +1,1578 @@
+/* Per-screen layout. */
+
+/* ── Screen 1 — Hero ──
+   NO overflow set here. overflow-x:clip + overflow-y:visible
+   gets coerced to overflow-y:auto by spec, which breaks
+   position:sticky on descendants. Apple avoids this by using
+   overflow-y:unset in their enhanced mode. We just skip it.
+
+   Runway is currently 400vh. NOTE: the build spec (Section 5.1)
+   calls for 300vh — kept at the existing 400vh on this pass per
+   explicit instruction not to change Screen 1's scroll-scrub
+   mechanism, coordinates, or timing. See report for this
+   discrepancy. */
+
+.section-performance {
+  position: relative;
+}
+
+.chapters-wrapper {
+  height: 400vh;
+}
+
+/* Sticky viewport — stays pinned at top:0 while you scroll
+   through the tall parent. All chapters stack in one grid cell. */
+.chapters {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: grid;
+  align-items: center;
+}
+
+/* ── Video ── */
+
+.video-container {
+  grid-row: 1;
+  grid-column: 1;
+  height: 100%;
+  width: 100%;
+  pointer-events: none;
+  position: relative;
+}
+
+.video-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.24);
+  pointer-events: none;
+}
+
+.video-container video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Text overlay ──
+   Positions come from the Global Reserve Figma spec, expressed as
+   percentages of the 1920x1080 reference frame so they scale fluidly
+   with the sticky viewport on any screen size. Per-word opacity/position
+   is driven entirely by js/scrub.js (per-frame, based on scroll/video
+   progress), not by CSS transitions. */
+
+.text-overlay {
+  grid-row: 1;
+  grid-column: 1;
+  position: relative;
+  height: 100%;
+  width: 100%;
+  pointer-events: none;
+}
+
+.text-block {
+  position: absolute;
+  left: 26.25%;   /* 504 / 1920 */
+  width: 47.5%;   /* 912 / 1920 */
+  color: #fff;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+  font-family: 'Playfair Display', Georgia, serif;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.text-block .word {
+  display: inline-block;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.text-block-1 {
+  top: 10.556%; /* 114 / 1080 */
+  font-weight: 500;
+  font-size: clamp(26px, 3.333vw, 64px);
+  line-height: 120%;
+}
+
+.text-block-2 {
+  top: 40%; /* 432 / 1080 */
+  font-weight: 700;
+  font-size: clamp(16px, 1.875vw, 36px);
+  line-height: 150%;
+}
+
+@media (max-width: 600px) {
+  .text-block {
+    left: 6%;
+    width: 88%;
+  }
+}
+
+/* ── Media slot (Section 6) ──
+   Generic wrapper for a fixed-aspect media area. Individual screens set
+   the aspect-ratio via their own selector, since it varies per slot. */
+
+.media-slot {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.media-slot canvas,
+.media-slot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Screen 2 — The Question ──
+   Dark, digital styling per the current design direction: this section
+   intentionally departs from the light --gr-paper/Playfair pairing used
+   elsewhere and uses the --gr-void/IBM Plex tokens defined for Screen 2
+   only (see css/tokens.css). Copy and meaning are unchanged from the
+   build spec — only the visual treatment differs. */
+
+#screen-2 {
+  /* Screen 1's sticky video overflows its own 100vh box (its grid row
+     isn't stretched by align-items:center, so the video falls back to
+     its intrinsic aspect ratio and renders ~330px taller than the
+     sticky viewport at wide/short widths). That overflow is Screen 1's
+     own layout, off-limits here — but with every element at the
+     default z-index:auto, the overflow was painting on top of this
+     section instead of being covered by it. An explicit stacking
+     context guarantees Screen 2's opaque background always wins,
+     regardless of how much Screen 1 overflows beneath it. */
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  /* vw-based (not vh-based) so short/wide desktop viewports still reach
+     the 144-160px target instead of being capped by viewport height. */
+  padding-block: clamp(96px, 11vw, 160px);
+  background: var(--gr-void);
+  color: var(--gr-text-primary);
+}
+
+/* Overrides the shared .container padding/max-width for this screen only. */
+#screen-2 .container {
+  max-width: 1200px;
+  padding-left: 48px;
+  padding-right: 48px;
+}
+
+.screen-question__container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 96px;
+  width: 100%;
+}
+
+.screen-question__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.screen-question__heading {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--gr-text-primary);
+  max-width: 560px;
+  margin-bottom: 32px;
+}
+
+.screen-question__body {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: clamp(17px, 1.4vw, 20px);
+  line-height: 1.7;
+  color: var(--gr-text-secondary);
+  max-width: 560px;
+}
+
+.screen-question__stat {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--gr-glass-line);
+}
+
+.screen-question__stat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gr-text-tertiary);
+}
+
+.screen-question__stat-value {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-weight: 600;
+  font-size: clamp(30px, 3.2vw, 46px);
+  line-height: 1.08;
+  color: var(--gr-bronze);
+  margin-top: 8px;
+}
+
+.screen-question__caption {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  color: var(--gr-text-tertiary);
+  margin-top: 12px;
+}
+
+.screen-question__media {
+  aspect-ratio: 1 / 1;
+}
+
+@media (max-width: 1024px) {
+  .screen-question__container {
+    gap: 48px;
+  }
+}
+
+@media (max-width: 768px) {
+  #screen-2 .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .screen-question__container {
+    grid-template-columns: 1fr;
+    gap: 56px;
+  }
+}
+
+/* ── Screen 3 — What RED actually is ──
+   Dark composition: centered header, one wide split card
+   (media 40% / text 60%), three supporting lines below. */
+
+#screen-3 {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  background: var(--gr-void);
+  color: var(--gr-text-primary);
+  padding-block: clamp(96px, 11vw, 160px);
+}
+
+#screen-3 .container {
+  max-width: 1200px;
+  padding-left: 48px;
+  padding-right: 48px;
+}
+
+.screen-red__header {
+  max-width: 720px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.screen-red__eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gr-bronze);
+}
+
+.screen-red__heading {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--gr-text-primary);
+  margin-top: 16px;
+}
+
+.screen-red__card {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 64px;
+  align-items: center;
+  margin-top: 80px;
+  padding: 32px;
+  border: 1px solid var(--gr-glass-line);
+  border-radius: 8px;
+  background: var(--gr-surface);
+}
+
+.screen-red__media {
+  min-width: 0;
+  aspect-ratio: 1 / 1;
+  width: min(100%, 480px);
+  margin-inline: auto;
+}
+
+.screen-red__body {
+  min-width: 0;
+  max-width: 560px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: clamp(17px, 1.4vw, 20px);
+  line-height: 1.7;
+  color: var(--gr-text-secondary);
+  text-align: left;
+}
+
+.screen-red__lines {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 48px;
+  margin-top: 64px;
+}
+
+.screen-red__line {
+  min-width: 0;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gr-text-secondary);
+  text-align: left;
+}
+
+/* ── Red-object illustration (decorative, no external asset) ──
+   A still isometric composition of stacked geometric slabs and
+   support posts standing on a wide platform: RED as the built
+   foundation under a home, not a currency. Every face is a plain
+   polygon in one of three bronze tones; the two lines are
+   understated assembly guides. Nothing here reads as a coin,
+   a card, a chart, or a literal house. */
+
+.screen-red__face {
+  stroke: var(--gr-glass-line);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.screen-red__face--top {
+  fill: var(--gr-bronze);
+  fill-opacity: 1;
+}
+
+.screen-red__face--right {
+  fill: var(--gr-bronze);
+  fill-opacity: 0.55;
+}
+
+.screen-red__face--left {
+  fill: var(--gr-bronze);
+  fill-opacity: 0.3;
+}
+
+.screen-red__guide {
+  stroke: var(--gr-glass-line);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.6;
+}
+
+@media (max-width: 1024px) {
+  .screen-red__card {
+    gap: 48px;
+  }
+
+  .screen-red__lines {
+    gap: 32px;
+  }
+}
+
+@media (max-width: 960px) {
+  .screen-red__card {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .screen-red__media {
+    order: -1;
+  }
+
+  .screen-red__lines {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  #screen-3 {
+    padding-block: clamp(72px, 9vw, 96px);
+  }
+
+  #screen-3 .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .screen-red__card {
+    padding: 24px;
+  }
+}
+
+/* ── Screen 4 — Rewards ──
+   Compact dark section: centered text block, then a full-width
+   canvas strip. No card, no shadow, no border, no gradient. */
+
+#screen-4 {
+  position: relative;
+  min-height: 60svh;
+  display: flex;
+  align-items: center;
+  background: var(--gr-void);
+  color: var(--gr-text-primary);
+  padding-block: clamp(72px, 8vw, 96px);
+}
+
+#screen-4 .container {
+  max-width: 1200px;
+  padding-left: 48px;
+  padding-right: 48px;
+}
+
+.screen-rewards__container {
+  width: 100%;
+  text-align: center;
+}
+
+.screen-rewards__heading {
+  max-width: 720px;
+  margin-inline: auto;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--gr-text-primary);
+}
+
+.screen-rewards__body {
+  max-width: 720px;
+  margin-inline: auto;
+  margin-top: 24px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: clamp(17px, 1.4vw, 20px);
+  line-height: 1.7;
+  color: var(--gr-text-secondary);
+}
+
+.screen-rewards__lead {
+  max-width: 720px;
+  margin-inline: auto;
+  margin-top: 16px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: clamp(18px, 1.8vw, 22px);
+  line-height: 1.65;
+  color: var(--gr-text-secondary);
+}
+
+.screen-rewards__strip {
+  width: 100%;
+  height: clamp(72px, 8vw, 120px);
+  max-height: 120px;
+  margin-top: 32px;
+}
+
+@media (max-width: 768px) {
+  #screen-4 .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+/* ── Screen 4.5 — scroll-controlled mask reveal over a looping video (Section 5.4a) ──
+   Second pinned section on the page (the first is Screen 1). A 320vh
+   scroll runway drives a sticky, full-viewport inner frame: a small
+   rounded clip-path window expands to full-bleed, holds, then contracts
+   to a wide panoramic band near the end, cueing the transition into
+   Screen 5. Both clip-path and the overlay opacity are compositable
+   properties set directly by js/video-reveal.js per animation frame —
+   nothing here animates via CSS transition/keyframes, so there is exactly
+   one driver of truth (scroll progress) and no layout shift while
+   scrolling. The video itself just plays (autoplay/muted/loop) on its own
+   timeline, independent of scroll, and is never transformed (no CSS zoom)
+   — its own camera motion is enough, and an added scale() amplified
+   flicker in the night scene's fine detail. */
+
+#screen-4-5 {
+  position: relative;
+}
+
+.reveal-wrapper {
+  height: 320vh;
+  position: relative;
+}
+
+.reveal-sticky {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--gr-void);
+  display: grid;
+  align-items: center;
+  justify-items: center;
+}
+
+.reveal-frame {
+  grid-row: 1;
+  grid-column: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  clip-path: inset(43% 36% 43% 36% round 16px);
+}
+
+.reveal-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reveal-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  background: var(--gr-surface);
+  border: 1.5px dashed var(--gr-glass-line);
+  color: var(--gr-text-tertiary);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+}
+
+.reveal-overlay {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.reveal-text {
+  grid-row: 1;
+  grid-column: 1;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding-inline: 24px;
+  pointer-events: none;
+}
+
+.reveal-headline {
+  max-width: 800px;
+  margin: 0;
+  text-align: center;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 500;
+  font-size: var(--fs-h1);
+  line-height: 1.2;
+  color: var(--gr-on-media);
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+  letter-spacing: 0;
+}
+
+.reveal-headline .word {
+  display: inline-block;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.reveal-headline.is-static .word {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-wrapper {
+    height: auto;
+  }
+
+  .reveal-sticky {
+    position: static;
+    height: 100svh;
+  }
+
+  .reveal-frame {
+    clip-path: none;
+  }
+
+  .reveal-overlay {
+    opacity: 0.35;
+  }
+
+  .reveal-headline {
+    opacity: 1;
+  }
+}
+
+/* ── Screen 5 — What your reserve is doing right now ──
+   Dark composition matching Screens 2-4: centered header, one full-width
+   four-segment state bar, four aligned descriptions below it, centered
+   closing line. Segment fills step from a restrained bronze whisper on
+   "Ready" down through surface tones to transparent on "Scheduled" — no
+   bright multicolour fills. The bar itself is aria-hidden since the
+   column titles below already carry the same four labels accessibly. */
+
+#screen-5 {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  background: var(--gr-void);
+  color: var(--gr-text-primary);
+  padding-block: clamp(96px, 11vw, 160px);
+}
+
+#screen-5 .container {
+  max-width: 1200px;
+  padding-left: 48px;
+  padding-right: 48px;
+}
+
+.screen-states__container {
+  width: 100%;
+}
+
+.screen-states__header {
+  max-width: 720px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.screen-states__heading {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--gr-text-primary);
+}
+
+.screen-states__body {
+  margin-top: 24px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: clamp(17px, 1.4vw, 20px);
+  line-height: 1.7;
+  color: var(--gr-text-secondary);
+}
+
+.state-bar {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr .9fr .6fr;
+  align-items: stretch;
+  height: 56px;
+  margin-top: 80px;
+  border: 1.5px solid var(--gr-glass-line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.state-bar__segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 100%;
+  padding-inline: 12px;
+  border-right: 1.5px solid var(--gr-glass-line);
+  opacity: 0.85;
+  transition: opacity 0.25s ease;
+}
+
+.state-bar__segment:last-child {
+  border-right: none;
+}
+
+.state-bar__segment:hover {
+  opacity: 1;
+}
+
+.state-bar__segment--ready {
+  background: rgba(205, 127, 50, 0.07);
+}
+
+.state-bar__segment--committed {
+  background: var(--gr-surface);
+}
+
+.state-bar__segment--reserved {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.state-bar__segment--scheduled {
+  background: transparent;
+}
+
+.state-bar__label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--gr-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.screen-states__columns {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr .9fr .6fr;
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.screen-states__column {
+  min-width: 0;
+  text-align: left;
+}
+
+.screen-states__column-title {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-weight: 600;
+  font-size: clamp(20px, 2vw, 28px);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--gr-text-primary);
+}
+
+.screen-states__column-text {
+  margin-top: 8px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gr-text-secondary);
+}
+
+.screen-states__closing {
+  max-width: 720px;
+  margin-inline: auto;
+  margin-top: 48px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gr-text-secondary);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  #screen-5 {
+    padding-block: clamp(72px, 9vw, 96px);
+  }
+
+  #screen-5 .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .state-bar {
+    grid-template-columns: 1fr;
+    height: auto;
+    border-radius: 28px;
+    margin-top: 56px;
+  }
+
+  .state-bar__segment {
+    height: 56px;
+    border-right: none;
+    border-bottom: 1.5px solid var(--gr-glass-line);
+    justify-content: flex-start;
+  }
+
+  .state-bar__segment:last-child {
+    border-bottom: none;
+  }
+
+  .screen-states__columns {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .state-bar__segment {
+    transition: none;
+  }
+}
+
+/* ── Screen 6 — The path to a home ──
+   Dark composition matching Screens 2-5: 50/50 split (photo left, text
+   right), a full-width static four-step stepper below both columns, then
+   the highlighted note line. No progress fill, no numbers in the markers —
+   the stepper is purely a static process illustration. */
+
+#screen-6 {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  background: var(--gr-void);
+  color: var(--gr-text-primary);
+  padding-block: clamp(96px, 11vw, 160px);
+}
+
+#screen-6 .container {
+  max-width: 1200px;
+  padding-left: 48px;
+  padding-right: 48px;
+}
+
+.screen-path__container {
+  width: 100%;
+}
+
+.screen-path__split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 96px;
+}
+
+.screen-path__media {
+  min-width: 0;
+  aspect-ratio: 4 / 5;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+.screen-path__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 44% center;
+  border-radius: 8px;
+}
+
+.screen-path__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen-path__heading {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--gr-text-primary);
+}
+
+.screen-path__body {
+  margin-top: 24px;
+  max-width: 560px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: clamp(17px, 1.4vw, 20px);
+  line-height: 1.7;
+  color: var(--gr-text-secondary);
+}
+
+.screen-path__stepper {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 96px;
+  padding: 0;
+  list-style: none;
+}
+
+.screen-path__stepper::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 7px;
+  height: 1.5px;
+  background: var(--gr-glass-line);
+}
+
+.screen-path__step {
+  position: relative;
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-right: 32px;
+}
+
+.screen-path__step:last-child {
+  padding-right: 0;
+}
+
+.screen-path__step-marker {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--gr-bronze);
+}
+
+.screen-path__step-label {
+  margin-top: 32px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gr-text-secondary);
+}
+
+.screen-path__note {
+  margin-top: 48px;
+  padding-left: 12px;
+  border-left: 2px solid var(--gr-bronze);
+  max-width: 720px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gr-text-secondary);
+}
+
+@media (max-width: 1024px) {
+  .screen-path__split {
+    gap: 48px;
+  }
+}
+
+@media (max-width: 768px) {
+  #screen-6 {
+    padding-block: clamp(72px, 9vw, 96px);
+  }
+
+  #screen-6 .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .screen-path__split {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .screen-path__media {
+    order: -1;
+  }
+
+  .screen-path__stepper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 32px;
+    margin-top: 56px;
+  }
+
+  .screen-path__stepper::before {
+    left: 7px;
+    right: auto;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    height: auto;
+    background: var(--gr-glass-line);
+  }
+
+  .screen-path__step {
+    flex-direction: row;
+    align-items: flex-start;
+    padding-right: 0;
+  }
+
+  .screen-path__step-label {
+    margin-top: 0;
+    margin-left: 20px;
+  }
+}
+
+/* ── Screen 7 — Gia ──
+   40/60 split (video left, text right), continuing the dark composition
+   from Screen 6. On a sufficiently large desktop viewport the section
+   becomes a scroll-driven scene: the inner stage pins while two quote
+   messages fade in over the lower third of the video, one after another,
+   driven by scroll progress (see js/gia.js). On tablet, phone, short
+   viewports, or with reduced motion, the pin is removed and both messages
+   are shown as a static, fully readable composition. */
+
+.screen-gia {
+  position: relative;
+  background: var(--gr-void);
+  color: var(--gr-text-primary);
+}
+
+.screen-gia__wrapper {
+  position: relative;
+}
+
+.screen-gia__sticky {
+  display: flex;
+  align-items: center;
+  min-height: 100svh;
+  padding-block: clamp(96px, 11vw, 160px);
+}
+
+.screen-gia__sticky .container {
+  max-width: 1200px;
+  padding-left: 48px;
+  padding-right: 48px;
+  width: 100%;
+}
+
+.screen-gia__container {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  align-items: center;
+  gap: 96px;
+}
+
+.screen-gia__media {
+  position: relative;
+  min-width: 0;
+  aspect-ratio: 4 / 5;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.screen-gia__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.screen-gia__messages {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+}
+
+.screen-gia__message {
+  align-self: flex-start;
+  max-width: 88%;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--gr-glass-line);
+  background: rgba(5, 5, 8, 0.72);
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--gr-text-primary);
+  opacity: 1;
+  transform: none;
+}
+
+.screen-gia__text {
+  min-width: 0;
+}
+
+.screen-gia__eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gr-bronze);
+}
+
+.screen-gia__heading {
+  margin-top: 16px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--gr-text-primary);
+}
+
+.screen-gia__body {
+  margin-top: 24px;
+  max-width: 560px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: clamp(17px, 1.4vw, 20px);
+  line-height: 1.7;
+  color: var(--gr-text-secondary);
+}
+
+.screen-gia__items {
+  margin-top: 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px 24px;
+}
+
+.screen-gia__item--wide {
+  grid-column: 1 / -1;
+}
+
+.screen-gia__item-title {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--gr-text-primary);
+}
+
+.screen-gia__item-text {
+  margin-top: 8px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gr-text-secondary);
+}
+
+.screen-gia__closing {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--gr-glass-line);
+  max-width: 720px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gr-text-secondary);
+}
+
+/* Scroll-driven scene: only on desktops wide and tall enough that the
+   whole 40/60 composition comfortably fits above the pinned stage, and
+   only without reduced motion — under prefers-reduced-motion: reduce the
+   wrapper keeps its normal height and the stage stays a static block, so
+   there is no extra scroll runway or pin to sit through. */
+@media (min-width: 1100px) and (min-height: 700px) and (prefers-reduced-motion: no-preference) {
+  .screen-gia__wrapper {
+    height: 220svh;
+  }
+
+  .screen-gia__sticky {
+    position: sticky;
+    top: 0;
+  }
+}
+
+@media (min-width: 1100px) and (min-height: 700px) and (prefers-reduced-motion: no-preference) {
+  .screen-gia__message {
+    opacity: 0;
+    transform: translateX(-20px) scale(0.95);
+  }
+}
+
+@media (max-width: 1099px), (max-height: 699px) {
+  .screen-gia__container {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+}
+
+@media (max-width: 768px) {
+  .screen-gia__sticky {
+    padding-block: clamp(72px, 9vw, 96px);
+  }
+
+  .screen-gia__sticky .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .screen-gia__items {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-gia__message {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Screen 8 — Transparency ──
+   Compact dark section: centered header, then a full-viewport-width
+   marquee that breaks out of the container by living directly inside
+   #screen-8 (which carries no side padding of its own — only the
+   .container child does) rather than via a negative-margin/100vw hack.
+   Uses --gr-surface instead of the --gr-void used by Screens 2-7, per
+   the current task's instruction, so the section reads as a distinct
+   surface from Screen 7 without adding a border. */
+
+#screen-8 {
+  position: relative;
+  min-height: 60svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--gr-surface);
+  color: var(--gr-text-primary);
+  padding-block: clamp(72px, 8vw, 96px);
+}
+
+#screen-8 .container {
+  max-width: 1200px;
+  padding-left: 48px;
+  padding-right: 48px;
+}
+
+.screen-transparency__header {
+  max-width: 720px;
+  margin-inline: auto;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s cubic-bezier(.22, .61, .36, 1),
+              transform 0.6s cubic-bezier(.22, .61, .36, 1);
+}
+
+.screen-transparency__header.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.screen-transparency__heading {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: clamp(36px, 4.5vw, 56px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--gr-text-primary);
+}
+
+.screen-transparency__body {
+  margin-top: 24px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: clamp(17px, 1.4vw, 20px);
+  line-height: 1.7;
+  color: var(--gr-text-secondary);
+}
+
+/* Full-bleed marquee. Two identical <ul> groups (the second
+   aria-hidden) sit directly adjacent inside the track, with zero gap
+   between them at the track level — every distance between pills lives
+   inside .ticker__list instead. Each group carries the six real items
+   plus one aria-hidden, visual-only repeat of the same six
+   (.ticker__item--repeat) so its own content is reliably wider than
+   the viewport at ordinary sizes; the group is also forced to at least
+   100vw and non-shrinking, so a group can never be narrower than the
+   screen. justify-content: space-around then spreads that group's own
+   pills across whatever little extra width remains at very wide
+   viewports instead of leaving it as one dead stretch of blank space
+   before the next group starts, while still landing a normal-looking
+   gap between the last pill of one group and the first pill of the
+   next (space-around gives every pill equal space on both sides, so
+   the two adjacent half-spaces at the group boundary sum to one
+   ordinary in-list gap). Because both groups are identical in content
+   and get sized/spaced identically, their computed widths match
+   exactly, so translating the track by exactly -50% reproduces the
+   first group's layout pixel-for-pixel and the loop has no visible
+   seam. */
+
+.ticker {
+  --ticker-fade: clamp(32px, 8vw, 120px);
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  margin-top: 80px;
+  mask-image: linear-gradient(to right, transparent 0, black var(--ticker-fade), black calc(100% - var(--ticker-fade)), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black var(--ticker-fade), black calc(100% - var(--ticker-fade)), transparent 100%);
+}
+
+.ticker__track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  animation: gr-ticker-scroll 48s linear infinite;
+  will-change: transform;
+}
+
+.ticker__list {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 12px;
+  /* Guarantees the seam to the next group always matches an ordinary
+     item gap. Twelve pills' own content is now reliably wider than
+     100vw, so space-around alone has no leftover space left to turn
+     into edge spacing at the group boundary — without this fixed
+     trailing pad the last pill of one group would sit flush against
+     the first pill of the next. */
+  padding-right: 12px;
+  width: max-content;
+  min-width: 100vw;
+  flex: 0 0 auto;
+  list-style: none;
+}
+
+.ticker__item {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 8px 18px;
+  border: 1px solid var(--gr-bronze-subtle);
+  border-radius: 999px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: var(--fs-caption);
+  color: var(--gr-text-secondary);
+}
+
+@keyframes gr-ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 768px) {
+  #screen-8 .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .ticker {
+    margin-top: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-transparency__header {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .ticker {
+    mask-image: none;
+    -webkit-mask-image: none;
+    padding-inline: 48px;
+  }
+
+  .ticker__track {
+    animation: none;
+    transform: none;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 12px;
+  }
+
+  .ticker__list {
+    width: auto;
+    min-width: 0;
+    padding-right: 0;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 12px;
+  }
+
+  .ticker__list[aria-hidden="true"] {
+    display: none;
+  }
+
+  .ticker__item--repeat {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) and (max-width: 768px) {
+  .ticker {
+    padding-inline: 24px;
+  }
+}
+
+/* ── Screen 10 — CTA ──
+   Full-bleed video-background section. The section itself owns the
+   stacking context (isolation: isolate) and the dark fallback color,
+   so the video/overlay/content layers below never bleed into or
+   interact with any earlier screen's stacking. */
+
+#screen-10 {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gr-void);
+  color: var(--gr-text-primary);
+  padding-block: clamp(96px, 11vw, 160px);
+}
+
+.screen-cta__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+}
+
+/* Single overlay, layered gradients: darkest behind the centered copy,
+   slightly lighter through the main image, darker again toward the
+   edges — a controlled vignette rather than a flat wash, per the
+   current task's readability target. Built only from --gr-void so the
+   vault's warm bronze character survives underneath it. */
+.screen-cta__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(circle at center,
+      rgba(5, 5, 8, 0.67) 0%,
+      rgba(5, 5, 8, 0.56) 42%,
+      rgba(5, 5, 8, 0.56) 72%,
+      rgba(5, 5, 8, 0.62) 100%);
+}
+
+.screen-cta__container {
+  position: relative;
+  z-index: 2;
+  max-width: 780px;
+  padding-left: var(--container-pad);
+  padding-right: var(--container-pad);
+  text-align: center;
+}
+
+.screen-cta__heading {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: clamp(36px, 4.5vw, 56px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--gr-text-primary);
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+}
+
+.screen-cta__body {
+  max-width: 700px;
+  margin: 24px auto 0;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: clamp(17px, 1.4vw, 20px);
+  line-height: 1.7;
+  color: var(--gr-text-secondary);
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+}
+
+.screen-cta__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 48px;
+}
+
+.screen-cta__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 40px;
+  border-radius: 999px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.2s, border-color 0.2s, background-color 0.2s, transform 0.2s;
+}
+
+.screen-cta__btn--primary {
+  background: var(--gr-text-primary);
+  color: var(--gr-ink);
+  border: 1.5px solid var(--gr-text-primary);
+}
+
+.screen-cta__btn--primary:hover {
+  opacity: 0.88;
+  transform: translateY(-2px);
+}
+
+.screen-cta__btn--secondary {
+  background: transparent;
+  color: var(--gr-text-primary);
+  border: 1.5px solid var(--gr-bronze);
+}
+
+.screen-cta__btn--secondary:hover {
+  background: var(--gr-bronze-subtle);
+  border-color: var(--gr-bronze);
+  transform: translateY(-2px);
+}
+
+.screen-cta__btn:focus-visible {
+  outline: 2px solid var(--gr-bronze);
+  outline-offset: 3px;
+}
+
+@media (max-width: 768px) {
+  #screen-10 {
+    padding-block: clamp(72px, 8vw, 96px);
+  }
+
+  .screen-cta__container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .screen-cta__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .screen-cta__btn {
+    width: 100%;
+  }
+}
+
+/* Below 768px, the moving video is replaced by the poster as a static
+   full-bleed background, per the current task's mobile media fallback —
+   independent of motion preference. */
+@media (max-width: 767px) {
+  .screen-cta__video {
+    display: none;
+  }
+
+  #screen-10 {
+    background-image: url('../media/cta-vault-poster.jpg');
+    background-size: cover;
+    background-position: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-cta__video {
+    display: none;
+  }
+
+  #screen-10 {
+    background-image: url('../media/cta-vault-poster.jpg');
+    background-size: cover;
+    background-position: center;
+  }
+
+  .screen-cta__btn {
+    transition: none;
+  }
+
+  .screen-cta__btn--primary:hover,
+  .screen-cta__btn--secondary:hover {
+    transform: none;
+  }
+}

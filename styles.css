@@ -1,0 +1,389 @@
+/* Gold accent tokens (--gold/--gold-bright/--gold-bright-rgb) and the
+   universal box-sizing/margin/padding reset both now live in
+   design-tokens.css (linked from index.html before this file) — shared
+   with mobile/styles.css, not duplicated here. */
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0b1e3a;
+}
+
+/* Full-viewport mask: the audience's actual window into the scene. Fixed
+   so it always spans the true browser viewport regardless of document
+   flow, and clips .scene-world so its cover-fit overflow never shows
+   past this box's edges. */
+.stage-viewport {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #0b1e3a;
+}
+
+/* Cover-sized moving world: main.js sizes this in pixels on every layout
+   pass to the "object-fit: cover" render size of the 2050x800 Figma
+   frame for the current viewport (plus a small overscan bleed for safe
+   vertical travel), then centers it with top/left:50% +
+   translate(-50%,-50%). The mouse-driven pan in main.js only ever ADDS a
+   translate3d() on top of that base centering — see main.js layout()/
+   tick() — so it can never expose an edge: the extra width/height beyond
+   the viewport is real rendered composition, not empty space. No CSS
+   transition on transform: it's driven purely by the JS lerp loop (a
+   transition here would fight the manual damping). */
+.scene-world {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Logical Figma composition: fills .scene-world exactly (same box, no
+   independent scaling of its own), so the 2050x800 internal coordinate
+   system and all 9 child layers' relative positions/sizes below are
+   completely unaffected by how large .scene-world is rendered for the
+   current viewport. */
+.scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.layer {
+  position: absolute;
+  will-change: transform;
+}
+
+/* Hover glow: filter (not box-shadow) so the glow follows each building's
+   real alpha silhouette instead of its rectangular bounding box — the
+   "is-hovered" class is toggled by main.js's pixel-alpha hit-testing, not
+   by native CSS :hover. Both states declare the same two drop-shadow()
+   functions so the browser can interpolate them smoothly; only their
+   color/blur values change. Independent of the parallax translate3d on
+   this same element — filter and transform don't interact. */
+.layer.building {
+  transition: filter 0.25s ease;
+  filter:
+    drop-shadow(0 0 0 rgba(255, 209, 128, 0))
+    drop-shadow(0 0 0 rgba(255, 209, 128, 0));
+  /* Buildings are keyboard-focusable (tabindex="0" in index.html) so
+     Enter/Space can activate them like the reference project's real
+     <button> hotspots — see main.js's "Keyboard access" section. No
+     outline for focus, on either the default UA ring or a custom
+     :focus-visible one: the glow/scale below (main.js drives
+     "is-hovered" off keyboard focus too, via focusedBuilding) is the
+     focus indicator by design — a rectangular outline around a building's
+     bounding box read as a visual defect against its real silhouette, so
+     it was removed rather than kept as a second, redundant indicator. */
+  outline: none;
+}
+
+.layer.building.is-hovered {
+  filter:
+    drop-shadow(0 0 10px rgba(255, 209, 128, 0.55))
+    drop-shadow(0 0 24px rgba(255, 178, 90, 0.35));
+}
+
+/* Hover scale lives on this inner wrapper, never on .layer.building itself
+   — that element already owns the per-frame parallax translate3d() from
+   main.js, and a single transform property can only hold one value; a
+   scale() here would either fight or silently overwrite the parallax
+   transform depending on write order. Splitting them across two elements
+   means each transform is independent: .layer keeps translate3d
+   (position), .building-lift keeps scale (hover). transform-origin sits
+   at the base (50% 100%) so the building appears to rise up off its own
+   foundation rather than growing outward from its center. */
+.building-lift {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+  transition: transform 0.25s ease;
+  will-change: transform;
+}
+
+.layer.building.is-hovered .building-lift {
+  transform: scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layer.building {
+    transition: none;
+  }
+
+  .building-lift {
+    transition: none;
+  }
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.cover {
+  object-fit: cover;
+}
+
+/* Sky */
+.sky {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 73%; /* 584 / 800 */
+  z-index: 0;
+}
+
+/* Buildings, left-to-right, positions taken from Figma
+   (buildings group offset [2,124] + each building's local offset) */
+
+.building-global-connections {
+  left: 0.098%;   /* 2 / 2050 */
+  top: 15.5%;     /* 124 / 800 */
+  width: 14.585%; /* 299 / 2050 */
+  height: 46.75%; /* 374 / 800 */
+}
+
+.building-glonari-news {
+  left: 14.683%;   /* 301 / 2050 */
+  top: 21.875%;    /* 175 / 800 */
+  width: 12.585%;  /* 258 / 2050 */
+  height: 40.375%; /* 323 / 800 */
+}
+
+.building-pulse {
+  left: 26.098%;  /* 535 / 2050 */
+  top: 21.875%;   /* 175 / 800 */
+  width: 14.39%;  /* 295 / 2050 */
+  height: 39.625%;/* 317 / 800 */
+}
+
+.building-persona {
+  left: 38.195%; /* 783 / 2050 */
+  top: 23%;      /* 184 / 800 */
+  width: 24.732%;/* 507 / 2050 */
+  height: 35.75%;/* 286 / 800 */
+}
+
+.building-banker {
+  left: 60.537%;  /* 1241 / 2050 */
+  top: 23.75%;    /* 190 / 800 */
+  width: 17.067%; /* 349.875 / 2050 */
+  height: 35%;    /* 280 / 800 */
+}
+
+.building-global-dream {
+  left: 76.244%;  /* 1563 / 2050 */
+  top: 20.75%;    /* 166 / 800 */
+  width: 12.732%; /* 261 / 2050 */
+  height: 40.75%; /* 326 / 800 */
+}
+
+.building-glonari-ancillary {
+  left: 88.976%;  /* 1824 / 2050 */
+  top: 29.75%;    /* 238 / 800 */
+  width: 11.073%; /* 227 / 2050 */
+  height: 30.375%;/* 243 / 800 */
+}
+
+/* This building's crop technique (see .crop-ancillary below) needs its
+   own overflow:hidden window to hide the oversized source image's extra
+   left/right content. That window must live on .building-lift itself,
+   not on .layer.building-glonari-ancillary — putting it on .layer would
+   clip .building-lift's hover scale() against a crop box that doesn't
+   grow with it (cutting off the roof once scaled). Here, the crop window
+   and its content are the same transformed element, so hovering scales
+   both together and nothing gets clipped. */
+.building-glonari-ancillary .building-lift {
+  overflow: hidden;
+}
+
+.crop-ancillary {
+  position: absolute;
+  top: 0;
+  left: -22.91%;
+  width: 142.73%;
+  height: 100%;
+  max-width: none;
+  pointer-events: none;
+}
+
+/* Foreground plaza (fountain, walkways, hedges) sits in front of the buildings */
+.plaza {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 99.875%; /* 799 / 800 */
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.crop-plaza {
+  position: absolute;
+  left: 0;
+  top: 11.74%;
+  width: 100%;
+  height: 102.65%;
+  max-width: none;
+  pointer-events: none;
+}
+
+/* Fountain water video — mask wrapper. Stretched to all of .layer.plaza
+   (itself the full 2050x799 scene frame — see .plaza above) so it lines up
+   1:1 with water-mask.svg's own 2051x799 viewBox, the same alignment basis
+   used by the earlier CSS-shimmer fountain attempt this replaces.
+   mask-size:100% 100% depends on that match: it's what keeps the mask's
+   pool-ring shape sitting exactly on the real pool instead of being
+   stretched/offset. */
+.water-video-mask {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  mask-image: url('assets/water-mask.svg');
+  -webkit-mask-image: url('assets/water-mask.svg');
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  pointer-events: none;
+}
+
+/* The video itself. Deliberately NOT object-fit:cover against the full
+   2050x799 frame above: the source footage is its own small, already-lit
+   fountain render (an oval pool + spray, matching the video's own
+   measured content bounding box of x:[0, 99.8%], y:[24.4%, 76.4%] of its
+   1920x1080 frame, everything outside that box being flat black, no
+   alpha channel) — covering the full wide/shallow frame ratio (2.57:1)
+   would crop to a thin vertical sliver centered on the video's own middle
+   (its pedestal band), landing on a compression-artifact strip there
+   instead of open water. Sized/positioned instead so the video's own oval
+   graphic (not the full 1920x1080 frame) lands directly on
+   water-mask.svg's pool-ring bounding box (in the same 2051x799 space:
+   x 716-1335, y 592-752) — left/width place the oval's left/right extent
+   (0%/99.8% of the video's own width) at that box's left/right edges; top
+   centers the oval's vertical midpoint (the video's own content spans
+   24.4%-76.4% of its height) on the ring's vertical midpoint. Only
+   left/top/width are set — height is intentionally omitted so the
+   video keeps its native 16:9 ratio instead of being stretched; the
+   resulting overflow above/below the ring is exactly what
+   .water-video-mask's mask then trims away along the ring's real curve,
+   which reads better than a hard rectangular crop would. */
+.water-video {
+  position: absolute;
+  left: 34.93%;   /* 716 / 2050 */
+  top: 62.08%;    /* ~496 / 799 — see comment above for the derivation */
+  width: 30.24%;  /* 620 / 2050 */
+  pointer-events: none;
+}
+
+/* ---------- Custom cursor (fine-pointer desktop only) ----------
+   Hidden by default (covers touch/coarse-pointer and no-hover devices);
+   shown only under the media query below. Movement is driven entirely
+   by main.js and is independent of the scene's own transform. */
+.cursor-dot,
+.cursor-ring {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.cursor-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--gold-bright);
+  box-shadow: 0 0 0 1.75px rgba(20, 15, 5, 0.8), 0 0 10px 2px rgba(var(--gold-bright-rgb), 0.6);
+  z-index: 9999;
+  /* Reference (#cursor.hover in the Glonari Global Campus styles.css)
+     transitions width/height/background/box-shadow into its hover state
+     — carried over verbatim so the dot's grow-and-soften reaction on a
+     building matches that reference's feel, not a reinvented one. */
+  transition:
+    width 0.25s cubic-bezier(0.2, 0.9, 0.3, 1),
+    height 0.25s cubic-bezier(0.2, 0.9, 0.3, 1),
+    background 0.25s ease,
+    border 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+/* Toggled by main.js (via the same silhouette hit-testing that drives the
+   building glow/scale) whenever the pointer is over an opaque building
+   pixel — same trigger condition and same visual response as the
+   reference project's "#cursor.hover" (there it's driven by
+   pointerenter/pointerleave on the hotspot buttons instead, since that
+   project's hit areas are real DOM elements; the effect itself is
+   unchanged). */
+.cursor-dot.hover {
+  width: 64px;
+  height: 64px;
+  background: rgba(var(--gold-bright-rgb), 0.08);
+  border: 1px solid rgba(var(--gold-bright-rgb), 0.8);
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.45), 0 0 30px 6px rgba(var(--gold-bright-rgb), 0.35);
+}
+
+.cursor-ring {
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+  z-index: 9998;
+  transition: width 0.4s ease, height 0.4s ease, opacity 0.4s ease;
+}
+
+/* Reference hides the trailing ring while the dot is in its hover state
+   (the dot itself becomes the big soft ring at that point) — same here. */
+.cursor-dot.hover ~ .cursor-ring {
+  opacity: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html, body {
+    cursor: none;
+  }
+
+  .cursor-dot,
+  .cursor-ring {
+    display: block;
+  }
+}
+
+/* ---------- Section modal ----------
+   Markup/behavior lives in index.html + section-modal.js; styling now
+   lives in section-modal.css (linked from <head>) so the exact same
+   rules apply unmodified to mobile/index.html too — see that file for
+   the actual #modal-overlay/#modal-card/etc. rules, not duplicated here. */
+
+/* ---------- Cross-project exit transition ----------
+   Plain fixed black overlay, sibling of .stage-viewport/#modal-overlay (see
+   index.html). Sits above everything (intro overlay included) while
+   active. Faded in by main.js's navigateWithFade() immediately before a
+   real page navigation to another one of the four connected sites (today:
+   the Digital Banker building -> digital-banker/gia/index.html), so the
+   jump reads as a deliberate cut-to-black instead of a hard reload flash.
+   Never removed/reset on this page since a navigation always follows it. */
+#exit-transition {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10000;
+  transition: opacity 0.5s ease;
+}
+
+#exit-transition.active {
+  opacity: 1;
+  pointer-events: all;
+}

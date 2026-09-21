@@ -1,0 +1,31 @@
+/* Design tokens shared by the desktop scene (styles.css) and the mobile
+   scene (mobile/styles.css) — the one place either file's shared colors
+   live, so neither keeps its own independent copy of the same value.
+   Both index.html and mobile/index.html link this before their own
+   stylesheet. (section-modal.css intentionally does NOT use this file —
+   it defines its own scoped --gold-bright so that one file keeps working
+   unmodified even if a future host page never links design-tokens.css.) */
+:root {
+  /* Gold accent, matching the Glonari Global Campus reference project's
+     :root values exactly (--gold/--gold-bright there). --gold-bright is
+     the one actually in use today: desktop's custom cursor + building
+     hover glow, and mobile's tap-zone focus/active feedback, are all the
+     same accent color by design, not a coincidence — a change here
+     moves both. --gold-bright-rgb is the same color as a bare "r, g, b"
+     triplet, for rgba(var(--gold-bright-rgb), alpha) call sites — a hex
+     custom property can't be split apart from inside rgba() otherwise.
+     --gold itself has no current call site in either file; kept as a
+     token in case future chrome (desktop or mobile) wants the deeper
+     shade instead of the bright one. */
+  --gold: #d9b877;
+  --gold-bright: #ffe9b8;
+  --gold-bright-rgb: 255, 233, 184;
+}
+
+/* Shared baseline reset — byte-for-byte identical in both stylesheets
+   before this file existed; declared once here instead of twice. */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}

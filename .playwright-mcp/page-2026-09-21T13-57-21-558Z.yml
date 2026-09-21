@@ -1,0 +1,16 @@
+- generic [ref=f6e5]:
+  - generic:
+    - generic:
+      - img "background wall"
+      - button "Experience — open section":
+        - generic [ref=f6e6] [cursor=pointer]
+      - button "Global Reserve — open section":
+        - generic [ref=f6e7] [cursor=pointer]
+      - button "Move Money — open section":
+        - generic [ref=f6e8] [cursor=pointer]
+      - button "Global Connections — open section":
+        - generic [ref=f6e9] [cursor=pointer]
+      - button "Global Dream — open section":
+        - generic [ref=f6e10] [cursor=pointer]
+      - button "Record Library — open section":
+        - generic [ref=f6e11] [cursor=pointer]

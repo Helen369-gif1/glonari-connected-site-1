@@ -1,0 +1,48 @@
+/* Design tokens — GLOBAL RESERVE build spec, Section 4.
+   Custom properties only. No selectors other than :root. */
+
+:root {
+  /* ── Color ── */
+  --gr-ink: #16130F;
+  --gr-ink-2: #5C554C;
+  --gr-paper: #F5F2ED;
+  --gr-paper-2: #EDE8E0;
+  --gr-line: #D7D0C4;
+  --gr-dark: #17140F;
+  --gr-dark-ink: #F1EBE1;
+  --gr-accent: #B98A3C;
+  --gr-on-media: #FFFFFF;
+
+  /* ── Type sizes ──
+     clamp(mobile-min, fluid-vw-at-1920, desktop) */
+  --fs-h1: clamp(30px, 3.333vw, 64px);
+  --fs-h2: clamp(26px, 2.5vw, 48px);
+  --fs-hero-body: clamp(17px, 1.875vw, 36px);
+  --fs-body: clamp(16px, 1.042vw, 20px);
+  --fs-lead: clamp(17px, 1.25vw, 24px);
+  --fs-stat: clamp(34px, 3.75vw, 72px);
+  --fs-item-title: clamp(17px, 1.042vw, 20px);
+  --fs-small: clamp(15px, 0.833vw, 16px);
+  --fs-caption: clamp(13px, 0.729vw, 14px);
+  --fs-eyebrow: clamp(12px, 0.729vw, 14px);
+
+  /* ── Layout ── */
+  --container-max: 1200px;
+  --container-pad: clamp(20px, 5vw, 80px);
+  --space-s: 16px;
+  --space-m: 32px;
+  --space-l: 64px;
+  --space-xl: 120px;
+
+  /* ── Screen 2 dark theme (Screen 2 only — see css/screens.css) ── */
+  --gr-void: #050508;
+  --gr-void-deep: #08090d;
+  --gr-surface: #12141a;
+  --gr-bronze: #cd7f32;
+  --gr-bronze-glow: rgba(205, 127, 50, 0.4);
+  --gr-bronze-subtle: rgba(205, 127, 50, 0.15);
+  --gr-text-primary: #ffffff;
+  --gr-text-secondary: rgba(255, 255, 255, 0.7);
+  --gr-text-tertiary: rgba(255, 255, 255, 0.45);
+  --gr-glass-line: rgba(255, 255, 255, 0.08);
+}

@@ -1,0 +1,505 @@
+{
+  "meta": {
+    "coordinate_system_note": "Arches now live in layers/wall.png's OWN pixel space (3688x905), not the old 2546x900 BACKGROUND stage -- they are DOM children of the wall layer group so they inherit its translateX parallax and stay visually attached to the wall.",
+    "arch_bbox_method": "Width of the source quad comes from the largest CONNECTED COMPONENT of the alpha mask (the actual arch body polygon) -- not the raw alpha>0 bbox. Height of the source quad spans the full (title+arch) cropped image, 0..full_h.",
+    "alpha_threshold": "alpha > 0 for full_bbox export/crop. MAIN_ARCH_BBOX uses connectedComponentsWithStats over the same alpha>0 mask, keeping only the largest-area component.",
+    "homography_method": "cv2.getPerspectiveTransform(src=[ (mainArchX0,0),(mainArchX1,0),(mainArchX1,full_h),(mainArchX0,full_h) ], dst=[TL,TR,BR,BL] of template-guide zone) -> CSS matrix3d, applied to the FULL (title+arch) cropped-new image element."
+  },
+  "wall_layer": {
+    "width": 3688,
+    "height": 905
+  },
+  "arches": {
+    "1": {
+      "original_size": [
+        710,
+        1303
+      ],
+      "full_bbox": {
+        "x": 1,
+        "y": 14,
+        "w": 708,
+        "h": 1288
+      },
+      "cropped_size": [
+        708,
+        1288
+      ],
+      "main_arch_bbox": {
+        "x": 1,
+        "y": 139,
+        "w": 705,
+        "h": 1163
+      },
+      "num_components": 141,
+      "main_component_area": 775818,
+      "other_large_components": [
+        {
+          "area": 22348,
+          "x": 166,
+          "y": 14,
+          "w": 385,
+          "h": 88
+        }
+      ],
+      "arch_x_local": {
+        "lx0": 0,
+        "lx1": 705
+      },
+      "corners_px": {
+        "TL": [
+          162.0,
+          178.0
+        ],
+        "TR": [
+          515.0,
+          217.0
+        ],
+        "BR": [
+          515.0,
+          731.0
+        ],
+        "BL": [
+          162.0,
+          757.0
+        ]
+      },
+      "matrix3d": [
+        0.593087176,
+        0.094243453,
+        0.0,
+        0.000179375,
+        0.0,
+        0.449534161,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1,
+        0.0,
+        162.0,
+        178.0,
+        0.0,
+        1.0
+      ],
+      "max_corner_error_px": 0.000184,
+      "fill_ratio_top": 1.0,
+      "fill_ratio_bottom": 1.0
+    },
+    "2": {
+      "original_size": [
+        708,
+        1303
+      ],
+      "full_bbox": {
+        "x": 0,
+        "y": 12,
+        "w": 708,
+        "h": 1291
+      },
+      "cropped_size": [
+        708,
+        1291
+      ],
+      "main_arch_bbox": {
+        "x": 0,
+        "y": 140,
+        "w": 705,
+        "h": 1163
+      },
+      "num_components": 132,
+      "main_component_area": 775963,
+      "other_large_components": [
+        {
+          "area": 15039,
+          "x": 337,
+          "y": 18,
+          "w": 275,
+          "h": 70
+        },
+        {
+          "area": 14442,
+          "x": 103,
+          "y": 12,
+          "w": 232,
+          "h": 76
+        }
+      ],
+      "arch_x_local": {
+        "lx0": 0,
+        "lx1": 705
+      },
+      "corners_px": {
+        "TL": [
+          646.0,
+          234.0
+        ],
+        "TR": [
+          956.0,
+          271.0
+        ],
+        "BR": [
+          956.0,
+          698.0
+        ],
+        "BL": [
+          646.0,
+          721.0
+        ]
+      },
+      "matrix3d": [
+        0.63025894,
+        0.106495922,
+        0.0,
+        0.000199312,
+        0.0,
+        0.377226956,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1,
+        0.0,
+        646.0,
+        234.0,
+        0.0,
+        1.0
+      ],
+      "max_corner_error_px": 0.000272,
+      "fill_ratio_top": 1.0,
+      "fill_ratio_bottom": 1.0
+    },
+    "3": {
+      "original_size": [
+        708,
+        1303
+      ],
+      "full_bbox": {
+        "x": 0,
+        "y": 18,
+        "w": 708,
+        "h": 1285
+      },
+      "cropped_size": [
+        708,
+        1285
+      ],
+      "main_arch_bbox": {
+        "x": 0,
+        "y": 140,
+        "w": 705,
+        "h": 1163
+      },
+      "num_components": 132,
+      "main_component_area": 775963,
+      "other_large_components": [
+        {
+          "area": 13702,
+          "x": 337,
+          "y": 18,
+          "w": 238,
+          "h": 83
+        },
+        {
+          "area": 10767,
+          "x": 143,
+          "y": 18,
+          "w": 191,
+          "h": 70
+        }
+      ],
+      "arch_x_local": {
+        "lx0": 0,
+        "lx1": 705
+      },
+      "corners_px": {
+        "TL": [
+          1067.0,
+          285.0
+        ],
+        "TR": [
+          1331.0,
+          316.0
+        ],
+        "BR": [
+          1331.0,
+          676.0
+        ],
+        "BL": [
+          1067.0,
+          692.0
+        ]
+      },
+      "matrix3d": [
+        0.620949567,
+        0.10249015,
+        0.0,
+        0.000185185,
+        0.0,
+        0.316731518,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1,
+        0.0,
+        1067.0,
+        285.0,
+        0.0,
+        1.0
+      ],
+      "max_corner_error_px": 0.000173,
+      "fill_ratio_top": 1.0,
+      "fill_ratio_bottom": 1.0
+    },
+    "4": {
+      "original_size": [
+        708,
+        1304
+      ],
+      "full_bbox": {
+        "x": 0,
+        "y": 14,
+        "w": 708,
+        "h": 1289
+      },
+      "cropped_size": [
+        708,
+        1289
+      ],
+      "main_arch_bbox": {
+        "x": 0,
+        "y": 140,
+        "w": 705,
+        "h": 1163
+      },
+      "num_components": 132,
+      "main_component_area": 775963,
+      "other_large_components": [
+        {
+          "area": 22239,
+          "x": 265,
+          "y": 14,
+          "w": 407,
+          "h": 73
+        },
+        {
+          "area": 13217,
+          "x": 44,
+          "y": 14,
+          "w": 219,
+          "h": 72
+        }
+      ],
+      "arch_x_local": {
+        "lx0": 0,
+        "lx1": 705
+      },
+      "corners_px": {
+        "TL": [
+          2359.0,
+          316.0
+        ],
+        "TR": [
+          2623.0,
+          285.0
+        ],
+        "BR": [
+          2623.0,
+          692.0
+        ],
+        "BL": [
+          2359.0,
+          677.0
+        ]
+      },
+      "matrix3d": [
+        -0.046038301,
+        -0.089661422,
+        0.0,
+        -0.000160315,
+        0.0,
+        0.280062064,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1,
+        0.0,
+        2359.0,
+        316.0,
+        0.0,
+        1.0
+      ],
+      "max_corner_error_px": 0.000116,
+      "fill_ratio_top": 1.0,
+      "fill_ratio_bottom": 1.0
+    },
+    "5": {
+      "original_size": [
+        708,
+        1303
+      ],
+      "full_bbox": {
+        "x": 0,
+        "y": 12,
+        "w": 708,
+        "h": 1291
+      },
+      "cropped_size": [
+        708,
+        1291
+      ],
+      "main_arch_bbox": {
+        "x": 0,
+        "y": 140,
+        "w": 705,
+        "h": 1163
+      },
+      "num_components": 132,
+      "main_component_area": 775963,
+      "other_large_components": [
+        {
+          "area": 14450,
+          "x": 122,
+          "y": 12,
+          "w": 231,
+          "h": 76
+        },
+        {
+          "area": 13443,
+          "x": 355,
+          "y": 18,
+          "w": 243,
+          "h": 70
+        }
+      ],
+      "arch_x_local": {
+        "lx0": 0,
+        "lx1": 705
+      },
+      "corners_px": {
+        "TL": [
+          2734.0,
+          271.0
+        ],
+        "TR": [
+          3044.0,
+          234.0
+        ],
+        "BR": [
+          3044.0,
+          721.0
+        ],
+        "BL": [
+          2734.0,
+          698.0
+        ]
+      },
+      "matrix3d": [
+        -0.092242271,
+        -0.093375275,
+        0.0,
+        -0.000174756,
+        0.0,
+        0.330751356,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1,
+        0.0,
+        2734.0,
+        271.0,
+        0.0,
+        1.0
+      ],
+      "max_corner_error_px": 0.00109,
+      "fill_ratio_top": 1.0,
+      "fill_ratio_bottom": 1.0
+    },
+    "6": {
+      "original_size": [
+        708,
+        1304
+      ],
+      "full_bbox": {
+        "x": 0,
+        "y": 12,
+        "w": 708,
+        "h": 1291
+      },
+      "cropped_size": [
+        708,
+        1291
+      ],
+      "main_arch_bbox": {
+        "x": 0,
+        "y": 140,
+        "w": 705,
+        "h": 1163
+      },
+      "num_components": 132,
+      "main_component_area": 775963,
+      "other_large_components": [
+        {
+          "area": 15468,
+          "x": 354,
+          "y": 13,
+          "w": 266,
+          "h": 87
+        },
+        {
+          "area": 14659,
+          "x": 99,
+          "y": 12,
+          "w": 253,
+          "h": 76
+        }
+      ],
+      "arch_x_local": {
+        "lx0": 0,
+        "lx1": 705
+      },
+      "corners_px": {
+        "TL": [
+          3175.0,
+          217.0
+        ],
+        "TR": [
+          3528.0,
+          178.0
+        ],
+        "BR": [
+          3528.0,
+          757.0
+        ],
+        "BL": [
+          3175.0,
+          731.0
+        ]
+      },
+      "matrix3d": [
+        -0.061081101,
+        -0.083663445,
+        0.0,
+        -0.000159238,
+        0.0,
+        0.398140976,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1,
+        0.0,
+        3175.0,
+        217.0,
+        0.0,
+        1.0
+      ],
+      "max_corner_error_px": 0.001091,
+      "fill_ratio_top": 1.0,
+      "fill_ratio_bottom": 1.0
+    }
+  }
+}

@@ -1,0 +1,808 @@
+# Glonari Global Scene — Development Plan
+
+Status: DRAFT — planning only. No stage below has been implemented.
+Companion document: [PRODUCT_REQUIREMENTS.md](./PRODUCT_REQUIREMENTS.md)
+
+How to use this plan: give Claude Code **one stage at a time**. Each stage is self-contained, has its own acceptance criteria, and ends with a checkpoint before the next stage starts. Stage order below follows the order given in the original request; I have not reordered it — the sequence is already technically sound given the actual project structure (static → stabilize → loading → movement-prep → reference analysis → movement → local interactivity → refinement → cross-cutting concerns). Where a stage has a hard prerequisite that isn't yet satisfied (an open question from the PRD), it's called out explicitly under "Preconditions."
+
+---
+
+## Stage 1 — Current project audit
+
+**Objective:** Establish a verified, shared understanding of exactly what exists today.
+
+**Why this stage exists:** All later stages assume facts about the current codebase. This planning session already performed this audit (see PRODUCT_REQUIREMENTS.md §3–4); this stage formally exists so that if resumed later/by someone else, the audit is repeated against the live files rather than trusted from memory.
+
+**Preconditions:** None.
+
+**What will be analyzed:** `index.html`, `styles.css`, all files in `assets/`, absence of JS/build tooling/git, DOM structure, layer naming, positioning technique, pointer-events state, alt text.
+
+**What will be implemented:** Nothing. Audit only, output is documentation (this plan + the PRD).
+
+**Files likely to be affected:** None (read-only).
+
+**Existing elements that must be preserved:** Everything — no changes in this stage.
+
+**What must NOT be changed:** Nothing may be changed in this stage.
+
+**Dependencies:** None.
+
+**Risks:** Low. Main risk is stale assumptions if files change between audit and later stages — re-verify before Stage 2 if time has passed.
+
+**Validation method:** Cross-check PRODUCT_REQUIREMENTS.md §3–4 against the live files.
+
+**Acceptance criteria:** Confirmed file list, confirmed absence of JS/build tools, confirmed DOM/CSS structure documented.
+
+**Definition of Done:** PRODUCT_REQUIREMENTS.md sections 3–4 accurately reflect the repository. ✅ Done as part of this planning session.
+
+---
+
+## Stage 2 — Architecture and project structure preparation
+
+**Objective:** Make the minimum structural changes needed so future interactive/animated systems have somewhere to live, without visually changing anything.
+
+**Why this stage exists:** There is currently no JS file, no script tag, and no separation between the "moving scene" and the "outer viewport" the movement system will need (see PRD §22). Adding these later on top of live animation code is riskier than preparing them first, while the page is still static.
+
+**Preconditions:** Confirm with you: (a) vanilla JS with no build step, matching current stack (PRD §25), and (b) whether to initialize git now (PRD §27 risk) before any further edits are made, so all subsequent stages are diffable/revertible.
+
+**What will be analyzed:** Where a `<script>` tag can be added without affecting render; whether wrapping `.scene` in an additional non-visual outer container changes any current layout math (it should not, if done correctly, since the outer wrapper can be sized to match `.scene`'s current box).
+
+**What will be implemented:**
+- An empty/no-op `main.js` (or similarly named) file, linked via `<script defer>`, doing nothing yet.
+- Possibly one new non-visual wrapper `<div>` around `.scene` (e.g. a future "stage/viewport" element) — added but inert, with CSS that makes it visually identical to today (no size/position change). This directly prepares for Stage 5, avoiding a second markup change later.
+- Git initialization and an initial commit, if you confirm.
+
+**Files likely to be affected:** `index.html` (new wrapper div + script tag), `styles.css` (rules for the new wrapper, written to be visually inert), new `main.js`.
+
+**Existing elements that must be preserved:** All 9 existing layers, their classes, their positioning rules, exactly as-is.
+
+**What must NOT be changed:** No positioning values, no image sources, no visual output. A pixel-diff/visual check before/after this stage should show zero difference.
+
+**Dependencies:** Stage 1 complete.
+
+**Risks:** Adding a wrapper div incorrectly could subtly change `.scene`'s effective sizing (e.g. if the wrapper isn't itself `display:contents` or exactly matched). Must be verified visually.
+
+**Validation method:** Load the page before and after the change and visually compare (screenshot diff or manual side-by-side) at a few viewport widths.
+
+**Acceptance criteria:** Page looks pixel-identical to Stage 1. New JS file loads with no console errors. New wrapper (if added) has no visual effect.
+
+**Definition of Done:** Structural scaffolding exists; page is visually unchanged; changes are committed (if git adopted).
+
+---
+
+## Stage 3 — Main scene stabilization
+
+**Objective:** Verify the existing scene faithfully reproduces the Figma design and is a solid, bug-free foundation before any motion is added.
+
+**Why this stage exists:** The request is explicit that the Figma-derived screen is the visual foundation and must be protected. Before layering in movement/hover (which will touch the same elements), confirm there are no existing rendering issues (e.g. at extreme viewport widths, on different browsers) that would otherwise get conflated with new bugs later.
+
+**Preconditions:** Stage 2 complete.
+
+**What will be analyzed:** Rendering at a range of viewport widths (very narrow to very wide, beyond `max-width:2050px`), the two bespoke crop techniques (`crop-ancillary`, `crop-plaza`) at those widths, image load behavior/order, and any layout edge cases (e.g. does `aspect-ratio` degrade gracefully in the target browser set?).
+
+**What will be implemented:** Bug fixes only, if any are found — no new features, no redesign. If nothing is found, this stage produces no code changes, only a validation record.
+
+**Files likely to be affected:** `styles.css` only, and only if a genuine rendering bug is found.
+
+**Existing elements that must be preserved:** Composition, proportions, all 9 layers, the two crop techniques.
+
+**What must NOT be changed:** No repositioning, no aesthetic changes — only correctness fixes if something is actually broken.
+
+**Dependencies:** Stage 2.
+
+**Risks:** Low; this is a verification stage. Main risk is scope creep into redesign — explicitly avoid that.
+
+**Validation method:** Manual visual test across viewport widths in a real browser; compare against Figma reference if available.
+
+**Acceptance criteria:** No visual bugs found, or all found bugs are fixed with zero composition change.
+
+**Definition of Done:** Scene renders correctly and consistently; ready to be a stable base for animation work.
+
+---
+
+## Stage 4 — Loading Screen planning and implementation
+
+**Objective:** Design and build the Loading Screen as its own system, gating access to the main scene.
+
+**Why this stage exists:** Requested as an independent product/system, decoupled from the main scene's own development.
+
+**Preconditions:** ~~**BLOCKED on your decisions** — PRD §8 lists loading screen visual design, progress strategy, minimum duration, exit transition, and failure/fallback behavior as open questions. This stage cannot be implemented (only sub-planned) until those are answered.~~ **RESOLVED (2026-08-25)** — decided and implemented in the same pass; see the IMPLEMENTED block below and PRD §8/§23/§24 item 1 for the decision record.
+
+**What will be analyzed (once unblocked):** Real asset load time for the ~18.5MB of PNGs on a representative connection, to decide if a real progress readout is meaningful or if a decorative/minimum-duration approach is more honest.
+
+**What will be implemented (once unblocked):** Loading screen markup/CSS/JS, an asset-readiness check (e.g. `Promise.all` over image `decode()`/`load` events), a defined transition into the main scene, and a `prefers-reduced-motion` variant of its transition.
+
+**Files likely to be affected:** `index.html` (new loading screen markup), `styles.css`, `main.js` (readiness logic + transition), possibly new small assets if the design calls for a logo/mark.
+
+**Existing elements that must be preserved:** Main scene remains untouched by this stage other than being the thing revealed after loading.
+
+**What must NOT be changed:** Do not touch scene positioning/assets while building this — it's an overlay concern.
+
+**Dependencies:** Stage 2 (script scaffolding). Independent of Stages 5–7 (movement) — could be built in parallel by a different session if desired, but is listed here in the original request order.
+
+**Risks:** If asset weight isn't addressed (PRD §27), a "real progress" bar may sit at a high percentage for a long time on slow connections — a design decision, not a bug, but worth flagging to you when this stage starts.
+
+> **IMPLEMENTED (2026-08-25) — branded intro overlay, shared between desktop and mobile.** Built as one shared pair of files, **`intro.css`**/**`intro.js`** (project root), linked from both `index.html` and `mobile/index.html` rather than duplicated per entry point — the same architectural pattern this project already uses for `section-modal.css`/`section-modal.js`. A full-screen overlay (`#intro-overlay`, `z-index: 10000` — above `#modal-overlay`'s 80 and the custom cursor's 9999/9998, the current highest values in the project, so it correctly covers everything while active) uses the scene's existing deep navy (`#0b1e3a`, already `styles.css`'s `html,body`/`.stage-viewport` background) rather than a new color, with a thin warm-gold `--gold-bright` circular mark (matching the cursor/hover-glow/modal accent) centered in the viewport, and "WELCOME TO" / "GLONARI" beneath it (GLONARI the more prominent line). No progress bar, percentage, spinner, or buttons. Sequence: fade + a small one-shot scale/rotate settle-in for the mark, fade the text in shortly after, hold (flexible — see below), briefly enlarge the mark, fade the whole overlay to transparent, then remove it from the DOM outright — never left as an invisible `opacity: 0` blocker.
+>
+> **Readiness/timing:** neither `main.js` exposes a custom "assets ready" event, so — consistent with this stage's original instruction not to invent beyond what's needed — the readiness signal used is the page's own `load` event (`document.readyState === 'complete'` if already true by the time `intro.js` runs), not a new `Promise.all`/`decode()` construction. Minimum display time is 1.5s; a hard ceiling of 3.5s forces the exit regardless of whether `load` has fired by then, so a slow/never-firing signal can't hold the intro open indefinitely — the Campus keeps loading behind the overlay throughout either way. `prefers-reduced-motion`: same timing logic, but the rotate/scale-in and the exit enlarge are dropped for a plain opacity fade (see `intro.css`).
+>
+> **Revisit/reload behavior (this stage's own open question — resolved):** the intro shows on every normal load and every manual reload; it is explicitly not a once-per-session notification. The one carve-out: an automatic desktop↔mobile device-gate redirect (Stage 14's `goMobile()`/`goDesktop()`, and only when triggered from their live `'change'`-event listeners — never from the initial synchronous on-load check) sets a one-shot `sessionStorage` marker immediately before that specific redirect call; the destination page's own inline `<head>` script reads and immediately clears that marker and, only when it was present, skips adding the `intro-active` class that would otherwise show the overlay — so that one automatic navigation doesn't show the intro twice, while every other path (including reloading that same destination page afterward) still does. Stage 14's redirect criteria and `goMobile()`/`goDesktop()` themselves are unmodified — only this marker set/consume logic was added around their two existing call sites.
+>
+> **Files affected:** new `intro.css`/`intro.js`; `index.html` and `mobile/index.html` each gained the shared overlay markup, a matching `<link>`/`<script defer>` pair, and the small marker-set/marker-consume script additions described above. No changes to `styles.css`, `main.js`, `mobile/main.js`, `mobile/styles.css`, or any existing scene positioning/asset/z-index value. Verified via automated headless-browser checks: normal desktop/mobile loads and manual reloads show the intro and it exits within the documented [1.5s, 3.5s] window; a simulated live device-gate redirect (marker set, then navigating to the destination page) shows no intro and consumes the marker, in both directions; a deep link straight into either page with no marker still shows the intro; the overlay is confirmed removed from the DOM after exit and no longer sits at the viewport center for `elementFromPoint`; and existing keyboard modal open/close (Stage 10) and the mobile carousel's next-arrow (Stage 14) both still work unchanged afterward. No real-device manual test performed — the same outstanding gap already noted elsewhere in this document for Stage 14.
+
+**Validation method:** Manual test of load → transition → interactive handoff, including a simulated slow network and a simulated asset failure.
+
+**Acceptance criteria:** Loading screen blocks interaction with the scene until ready; transitions out smoothly; respects reduced motion; has a defined (even if minimal) failure behavior.
+
+**Definition of Done:** Loading screen ships as an independent, testable system with no regressions to the main scene.
+
+---
+
+## Stage 5 — Global scene movement preparation
+
+**Objective:** Prepare the container/transform architecture the movement system will need, without adding any actual movement yet.
+
+**Why this stage exists:** Per PRD §22, `.scene` today is sized exactly to the visual composition with `overflow:hidden`; translating it directly for movement would expose empty background at the edges. This stage resolves that architecture question before any motion code is written — this is the stage that "replaces a traditional parallax stage," per the original request.
+
+**Preconditions:** Stage 3 complete (stable base). Does not require Stage 4.
+
+**What will be analyzed:** Whether the outer wrapper introduced in Stage 2 should become a fixed-size "viewport/mask" (`overflow:hidden`) while `.scene` itself is slightly oversized relative to it, so that translating `.scene` within the mask never reveals empty edges within the planned movement amplitude. This requires knowing the amplitude range from Stage 6 (or a conservative placeholder that Stage 7 can tighten).
+
+**What will be implemented:** CSS-only restructuring: the mask/viewport wrapper sized to the visible area, `.scene` (or a new inner "world" layer) sized slightly larger, centered by default, with headroom on all sides sufficient for the eventual movement range. No transform/JS movement yet — this stage only builds the empty stage for it.
+
+**Files likely to be affected:** `styles.css` (mask/viewport rules, oversized inner layer sizing), `index.html` only if an additional wrapper level is needed beyond Stage 2's.
+
+**Existing elements that must be preserved:** All 9 layers' relative positions to each other must stay pixel-identical; only the outer scaling/masking context changes.
+
+**What must NOT be changed:** No visible difference at rest (mouse not moving / no JS yet) compared to Stage 3's output.
+
+**Dependencies:** Stage 2 (wrapper scaffolding), conceptually informed by Stage 6 for amplitude sizing (can use a conservative placeholder and revisit).
+
+**Risks:** Oversizing the inner layer changes how `max-width` centering interacts with the viewport — needs careful testing across widths so no edge is ever exposed even at extreme viewport aspect ratios.
+
+**Validation method:** Visual check at rest (should be identical to Stage 3); manual temporary transform test (e.g. dev-tools-only translate) to confirm no edge exposure across the intended amplitude range, then remove the test transform.
+
+**Acceptance criteria:** Page at rest is visually identical to Stage 3. A manually-applied test translation within the planned amplitude never reveals empty background.
+
+**Definition of Done:** Container architecture is ready to receive real cursor-driven movement in Stage 7.
+
+> **CORRECTED (post-Stage-7 review) — superseded / replaced by the accepted cover + real-overflow architecture.**
+> The first Stage 5 implementation (mask capped at `max-width:2050px` + `aspect-ratio:2050/800`, with an inner `.scene-world` oversized by fixed `--world-scale-x:1.12`/`--world-scale-y:1.04` headroom filled with a plain navy buffer) was **rejected**: on real desktop viewports it rendered the scene as "a long low strip" that did not fill the viewport height, and its headroom was an artificial color buffer rather than real composition.
+>
+> **Accepted replacement architecture:**
+> - `.stage-viewport` is now a genuine full-viewport mask: `position:fixed; inset:0; overflow:hidden` — no `max-width`/`aspect-ratio` cap.
+> - `.scene-world` is sized in real pixels by `main.js`, every layout pass, to the `object-fit: cover` render size of the logical 2050×800 Figma frame for the current viewport (`scale = max(vw/2050, vh/800)`), plus a small `1.035×` overscan bleed for safe vertical travel. Centered via CSS `top/left:50%`; `main.js` adds `translate3d()` on top for movement.
+> - `.scene` now simply fills `.scene-world` at 100%×100% — no inverse-scale math, no artificial headroom. The composition's own aspect ratio (2.5625) is far wider than any realistic desktop viewport, so the height-driven cover scale naturally makes the rendered scene much wider than the viewport — that real overflow (actual sky/buildings/plaza pixels, not a color buffer) is the horizontal travel space.
+> - Safe travel is derived from that real overflow: `maxTravelX = max(0, (renderW-vw)/2)`, `maxTravelY = min(max(0,(renderH-vh)/2), 24px)`.
+> - This mirrors the proven architecture from the `Glonari Global Campus` reference project (`#stage`/`#scene` in its `styles.css`/`script.js`), adapted to this project's 9-separate-layer composition instead of a single flattened image.
+>
+> Implementation status: technically complete, verified mathematically and via automated headless-browser rendering at 1440×960 / 1920×1080 / 2560×1440 (see chat record) — **pending your manual visual approval**.
+
+---
+
+## Stage 6 — Aircord motion-reference analysis
+
+**Objective:** Produce a written technical motion specification by analyzing the first screen of aircord.co.jp/en/, before any movement code is written.
+
+**Why this stage exists:** Explicitly requested as its own pre-implementation analysis stage, to avoid guessing at "smooth, soft, elegant, curved" without a concrete reference basis, and to explicitly separate what is/isn't being copied.
+
+**Preconditions:** None technically, but logically follows Stage 5 (architecture) so the spec produced here can be implemented immediately in Stage 7.
+
+**What will be analyzed:** The Aircord hero's cursor-to-movement mapping (linear vs eased vs curved), approximate amplitude (horizontal vs vertical ratio), return-to-neutral behavior, whether it uses `transform` or something else, approximate frame smoothness/technique, and anything that gives it its "arc-like" quality.
+
+**What will be implemented:** No code. Output is a short written spec (can live inline in this file's Stage 7 notes, or as an addendum) covering: what we're copying (feel, easing character, horizontal-dominant/slight-vertical amplitude ratio, soft return-to-neutral), what we're explicitly NOT copying (their visual design, their specific content/layers, anything scroll-linked beyond the hero), proposed amplitude limits, proposed easing/smoothing approach, cursor normalization approach, and acceptance criteria for Stage 7.
+
+**Files likely to be affected:** None (documentation-only stage). Could append an "Appendix: Aircord Motion Spec" to this plan or PRODUCT_REQUIREMENTS.md §11.
+
+**Existing elements that must be preserved:** N/A — no code touched.
+
+**What must NOT be changed:** No code changes in this stage at all.
+
+**Dependencies:** None blocking, but must complete before Stage 7 starts.
+
+**Risks:** Reference site could change/redesign between analysis and later reuse — capture concrete notes (not just "go look at it") so the spec survives independently.
+
+**Validation method:** The written spec is reviewed and approved by you before Stage 7 begins.
+
+**Acceptance criteria:** A concrete, numeric-where-possible motion spec exists (amplitude ranges, easing type, mapping function) that Stage 7 can implement directly without further guesswork.
+
+**Definition of Done:** You've approved the motion spec.
+
+> **CORRECTED (post-Stage-7 review) — superseded / replaced by the accepted cover + real-overflow architecture.**
+> The fixed amplitude values this stage produced (`±4.5vw` / `±1.5vh`, fixed per-axis `tau` of 0.4s/0.6s) are **no longer the accepted approach**. Amplitude is now derived dynamically per viewport from real rendered overflow (see the Stage 5 and Stage 7 correction notes) rather than fixed percentages of viewport size — this is both safer (ties amplitude to actual available overflow instead of an assumed-safe constant) and matches the proven `Glonari Global Campus` reference implementation. Smoothing is now a single shared time-independent exponential damping constant (`tau ≈ 0.3s`) applied to both axes; the horizontal-dominant/vertical-secondary feel comes from the amplitude asymmetry (real overflow is naturally much larger horizontally for this composition's aspect ratio), not from different per-axis smoothing speeds.
+>
+> The core *feel* requirements this stage established (smooth, soft, eased, mostly horizontal with a small vertical component, no rigid 1:1 tracking, soft return-to-neutral, no rotation) remain valid and are what the corrected Stage 7 implementation still targets.
+
+---
+
+## Stage 7 — Global mouse-controlled scene movement
+
+**Objective:** Implement the unified cursor-driven movement of the whole scene, per the Stage 6 spec, using the Stage 5 architecture.
+
+**Why this stage exists:** This is the actual feature requested in PRD §10 — a single, soft, elegant global drift of the entire composition together.
+
+**Preconditions:** Stage 5 (architecture) and Stage 6 (spec) both complete and approved.
+
+**What will be analyzed:** Confirm the Stage 5 mask/headroom is sufficient for the Stage 6 spec's final amplitude numbers; adjust if not.
+
+**What will be implemented:** Mouse-move listener (likely scoped to the viewport/mask element from Stage 5), cursor position normalization, the eased/curved mapping function from Stage 6, an animation loop (`requestAnimationFrame`) applying a `transform: translate()` (and possibly a very slight `rotate`/curve component per Stage 6) to the inner "world" layer, smooth return-to-neutral on mouse-leave, and a `prefers-reduced-motion` branch that disables/minimizes the effect.
+
+**Files likely to be affected:** `main.js` (new movement module), possibly `styles.css` (transition/will-change hints), no changes to `index.html` beyond what Stage 2/5 already added.
+
+**Existing elements that must be preserved:** All layer relative positions; no per-building independent movement (explicitly one unified transform, not per-layer).
+
+**What must NOT be changed:** Do not add per-building movement speed differences — that would reintroduce the "classic parallax" model explicitly rejected in this request.
+
+**Dependencies:** Stages 5 and 6.
+
+**Risks:** Performance on lower-end devices if not compositor-friendly; edge exposure if amplitude exceeds Stage 5's headroom; motion sickness if not properly eased — reduced-motion branch mitigates this.
+
+**Validation method:** Manual interaction testing across viewport sizes and devices/browsers; DevTools performance recording to confirm compositor-only work (no layout thrashing); reduced-motion OS setting test.
+
+**Acceptance criteria:** Movement matches the Stage 6 spec's feel (smooth, soft, slow, mostly horizontal, curved return), never exposes empty edges, returns smoothly to neutral, disables/minimizes under reduced-motion.
+
+**Definition of Done:** Global movement ships as an isolated, working system with no interactive-element logic yet layered on top.
+
+> **CORRECTED (post-Stage-7 review) — superseded / replaced by the accepted cover + real-overflow architecture.**
+> The first Stage 7 implementation (built on the rejected Stage 5 architecture, using fixed `±4.5vw`/`±1.5vh` amplitude and per-axis `tau` 0.4s/0.6s) was **rejected** together with Stage 5, for the same "long low strip" sizing defect — the movement math itself wasn't wrong, but it was built on top of a viewport that didn't correctly fill the screen.
+>
+> **Accepted replacement**, adapted from the proven `Glonari Global Campus` reference (`script.js`):
+> - `main.js` computes cover-fit sizing and real-overflow travel limits every layout pass (see Stage 5 correction note above).
+> - Pointer position is normalized against `.stage-viewport`'s rect to `[-1, 1]` per axis; target offset is `-normalized * maxTravel` per axis (negated: pointer right → world shifts left → the scene's right side comes into view — a "look toward" mapping, not a drag handle).
+> - A single `requestAnimationFrame` loop applies frame-rate-independent exponential smoothing (`offset += (target-offset) * (1 - exp(-dt/tau))`, `tau ≈ 0.3s` shared by both axes) to `.scene-world`'s `transform` only — still exactly one transform, no per-building/per-layer movement, not classic parallax.
+> - The loop stops once `offset` is within 0.05px of `target` (avoiding an infinite `requestAnimationFrame` loop at rest) and restarts on the next `pointermove`/`pointerleave`/reduced-motion-preference change.
+> - `pointerleave` (and `window` `blur`, for robustness) resets the target to `(0,0)`, so the scene eases back to neutral through the same damping loop — no separate return animation.
+> - `prefers-reduced-motion: reduce` fully disables movement and holds `.scene-world` at its base (neutral) position.
+> - A custom cursor (small gold dot + softly trailing gold ring, `pointer-events:none`, fine-pointer/hover devices only) was added in this correction pass, adapted from the same reference project, and is fully independent of the scene's movement state.
+>
+> Implementation status: technically complete, verified mathematically (safe-travel bounds proven never to expose an edge, by construction: `renderW/H = viewport + 2×maxTravel`) and via automated headless-browser interaction testing at 1440×960 / 1920×1080 / 2560×1440 (pointer-driven offset matches computed targets exactly; all 9 layers move by an identical delta; return-to-neutral and `prefers-reduced-motion` both confirmed) — **pending your manual visual approval**. Real cross-browser/manual mouse-feel testing has not been performed.
+
+> **SUPERSEDED (2026-08-18)** — the "one unified transform, not per-layer, explicitly not classic parallax" requirement above (and in the correction note right above this one) is replaced by an explicitly-requested **per-layer depth parallax** system, at the user's direct request in chat (this was a deliberate reversal of the earlier "no per-building movement speed differences" constraint, not a bug).
+>
+> **Accepted replacement:**
+> - `.scene-world` itself now stays statically centered (no per-frame transform). Each `.layer` (sky, all 7 buildings, plaza) receives its own `translate3d()`, scaled by a per-layer `depth` multiplier, off the *same* shared eased pointer offset — so the damping/easing physics (`tau`, the settle threshold) stays exactly as before; only the amplitude now varies per layer.
+> - Sky (`depth 0.2`) and plaza (`depth 1.1`) use fixed design-constant depths — background barely drifts, the foreground plaza leads.
+> - Buildings do **not** use a hand-picked depth. Each building's depth is derived, every `layout()` pass, from its real logical position in the 2050×800 frame (how far its clipped edge sits from the viewport edge at rest, as a fraction of the world's safe travel range, scaled against the plaza reference depth) — so it adapts correctly to any viewport/aspect ratio instead of being a fixed guess. A `0.55` floor keeps buildings that are already fully visible at rest lightly participating in the depth effect.
+> - `maxTravelX/Y` is normalized against whichever layer currently has the *highest* depth (usually plaza, but a building can take over if its required reveal exceeds plaza's) — so the fastest layer never exceeds the safe, edge-exposure-free travel ceiling, and every slower layer automatically gets a smaller, safe share of it. `BLEED`/`MAX_TRAVEL_Y_PX` untouched.
+> - Adjacent buildings moving at different rates no longer line up at their shared seam at nonzero offset, which was found to visibly cover one building's facade label with its neighbor's. Fixed with a depth-proportional `z-index` per building (plus fixed `z-index: 0` on sky / `1000` on plaza) so the faster/closer-reading layer always occludes the slower one at the seam, instead of an arbitrary DOM-order winner.
+>
+> Implementation status: technically complete, verified via automated headless-browser testing at 1440×900 (computed per-building depth/required-shift/distance-from-center table cross-checked against live `getComputedStyle().transform` values; both mouse extremes screenshotted confirming all 7 buildings become fully visible, including facade text, at their own relevant extreme) — pending manual visual approval.
+
+---
+
+## Stage 8 — Interactive element architecture
+
+**Objective:** Prepare selected buildings for local hover/click interaction without conflicting with the Stage 7 global transform.
+
+**Why this stage exists:** PRD §12/§22 identify a real risk: both systems may want to apply CSS `transform` to overlapping elements. This stage resolves the architecture (e.g. global transform on an outer "world" layer, local hover/scale transform on each building's own inner wrapper — two separate transform contexts) before any hover effect is coded.
+
+**Preconditions:** Stage 7 complete. **Also blocked on your decision** (PRD §12 open questions): which of the 7 buildings are interactive.
+
+**What will be analyzed:** Whether each `.building-*` element needs an additional inner wrapper so that "global position" (set by the Stage 7 world transform) and "local hover transform" (set independently per building) can both apply without one overwriting the other (e.g. nested elements, each owning one transform, rather than both writing to the same element's `transform` property).
+
+**What will be implemented:** Structural-only changes: for each confirmed-interactive building, an inner wrapper div if not already sufficiently isolated; `pointer-events` re-enabled only on those specific elements (reversing the current blanket `pointer-events:none`, per PRD §22); no visual hover effect yet.
+
+**Files likely to be affected:** `index.html` (wrappers on interactive buildings only), `styles.css` (`pointer-events` overrides), `main.js` (event delegation scaffolding).
+
+**Existing elements that must be preserved:** Non-interactive layers (sky, plaza, any non-selected buildings) keep `pointer-events:none` exactly as today.
+
+**What must NOT be changed:** No visual hover/glow effect yet — this stage is plumbing only.
+
+**Dependencies:** Stage 7, and your answer on the interactive-building list.
+
+**Risks:** The plaza layer renders on top of the buildings in DOM order — re-enabling pointer events on buildings must not be blocked by the plaza intercepting clicks/hovers over any overlapping visual area; needs explicit verification per building.
+
+> **Note (2026-08-18), re: Stage 7's per-layer parallax supersession:** each `.building-*` element now directly receives its own depth-scaled movement `transform` (and a depth-proportional `z-index`) every frame. The "inner wrapper for local hover transform, separate from the global-movement transform" split this stage calls for must nest *inside* that existing `.building-*` element (not replace or compete with it) — i.e. the hover wrapper becomes a new child div owning its own hover `transform`, while `.building-*` itself keeps owning the parallax `transform`/`z-index`. Two separate elements, two separate transforms, same as originally planned — just one level deeper than when this stage was first written.
+
+> **SUPERSEDED (2026-08-18)** — the "which of the 7 buildings are interactive" precondition above is resolved by direct user request: all 7 (global-connections, glonari-news, pulse, persona, banker, global-dream, glonari-ancillary) are interactive; none are decorative-only. The planned architecture is also **replaced** for the hover slice actually shipped: instead of re-enabling `pointer-events` on building elements and relying on native `:hover`, `main.js` now does its own pointer-coordinate hit-testing per building, sampling each building's real PNG alpha channel (via a one-time offscreen `<canvas>` per building) against the live pointer position and each building's current (parallax-transformed) `getBoundingClientRect()`. This was chosen over the native-`:hover`/bounding-box approach because it (a) matches the explicit requirement that the hit-area follow the building's real silhouette, not its rectangular bounding box, and (b) sidesteps this stage's own flagged risk — the foreground `.plaza` layer's large bounding box (z-index 1000) can no longer block hover, since detection never goes through the DOM's native pointer-event hit-testing chain at all. Net effect: `pointer-events:none` on building images is unchanged/untouched (no CSS `pointer-events` overrides were needed), and no inner hover-wrapper `<div>` was added yet — the `is-hovered` class and its `filter` glow (see Stage 9 update) are applied directly to the existing `.building-*` element, since `filter` doesn't conflict with that same element's parallax `transform`. An inner wrapper remains the planned approach if/when hover also needs its own `transform` (e.g. the scale from Stage 9's original scope), since `transform` (unlike `filter`) cannot coexist on one element with the parallax `transform` without one overwriting the other.
+
+**Validation method:** Hover/click a test `console.log` on each confirmed-interactive building; confirm non-interactive layers remain inert; confirm global movement (Stage 7) still works unaffected.
+
+**Acceptance criteria:** Each interactive building can independently receive hover/click events; global movement is unaffected; no unintended layers become clickable.
+
+**Definition of Done:** Clean event-handling foundation exists for Stages 9–10. ✅ Hover event-handling foundation (silhouette hit-testing) shipped 2026-08-18, per the correction above — click handling (Stage 10) still pending.
+
+> **STATUS ROLLUP (2026-08-18, this entry supersedes the acceptance criteria/DoD above with what was actually verified, across four consecutive prompts in the same session — kept as one block since the four shipped as one continuous piece of work, not as separate stages revisited independently):**
+>
+> **Status: Stage 8 substantially complete.** The event-handling foundation is real and load-bearing — Stages 9 and 10 both build directly on it, not on placeholders.
+>
+> **Real, verified acceptance criteria (replacing the generic ones above):**
+> 1. All 7 buildings (global-connections, glonari-news, pulse, persona, banker, global-dream, glonari-ancillary) independently receive hover, focus, and click/activation — confirmed via Playwright for at least Banker, Persona, and Ancillary (hover/scale/glow) and Global Connections (keyboard path), with no cross-building bleed.
+> 2. Hit-testing is silhouette-accurate (real PNG alpha, not bounding box) for both mouse hover and mouse click — verified: a point inside a building's rectangular box but on a transparent pixel does *not* trigger hover; an opaque facade pixel does.
+> 3. Global per-layer parallax (Stage 7) is provably unaffected: `.layer.building`'s own `translate3d(...)` transform is confirmed unchanged (same matrix) while a building is hovered, focused, scaled, and glowing — filter/scale live on separate elements/properties by construction (see Stage 9's z-index/wrapper notes), not layered onto the same `transform`.
+> 4. No unintended layers are interactive: sky, plaza remain inert; only `.layer.building` elements carry `tabindex`/`role="button"`/hover-hit-testing.
+> 5. Keyboard parity with mouse, added in this pass: every building is a real Tab stop (`tabindex="0"`, `role="button"`, `aria-label`); focusing one shows the same glow+scale as mouse hover (`focusedBuilding` in `main.js`, reconciled with mouse's `hoveredBuilding` via `applyElevated()`/`recomputeElevated()` so neither input mode's state clobbers the other) plus a crisp `:focus-visible` outline; Enter or Space activates it exactly like a click (verified: focusing Global Connections via `.focus()` then pressing Enter opens its modal with the correct title).
+>    > **SUPERSEDED (2026-08-18, later same day)** — the `:focus-visible` outline mentioned above is removed: it rendered as a rectangular ring around the building's bounding box, which read as a visual defect against its real (non-rectangular) silhouette — reported directly by the user from a screenshot taken right after a modal-close focus-restore. The glow+scale alone (already shared with mouse hover) remains as the focus indicator; `.layer.building { outline: none; }` in styles.css now applies unconditionally instead of only at rest. Keyboard focusability, Tab order, and Enter/Space activation are all unchanged — only this one visual was removed. Re-verified: focusing a building still shows the glow and `z-index: 500` boost with `outlineStyle: none`; Enter still opens its modal; Tab/Shift+Tab still stays trapped inside the modal; Escape still restores focus to the originating building, now with no outline.
+> 6. The plaza-occlusion risk this stage originally flagged is confirmed resolved for both hover *and* the hover z-index boost: a hovered/focused/scaled building's z-index is temporarily raised (see Stage 9) above every other building but still below plaza's fixed foreground layer, and this was re-verified after the keyboard-focus addition (focusing a building also reaches `z-index: 500`, same as mouse hover).
+> 7. Click-to-modal (Stage 10) and the modal's own focus trap/restoration are wired through this same foundation — see Stage 10 for its own acceptance criteria.
+>
+> **Explicitly still open (not silently dropped):** touch/tap equivalents (Stage 14, unrelated to this pass); real panel copy (Stage 11); any interactivity on the plaza layer (PRD §12, still an open question).
+
+---
+
+## Stage 9 — Hover effects
+
+**Objective:** Implement the actual local hover visuals (scale, glow/highlight) on the interactive buildings from Stage 8.
+
+**Why this stage exists:** Requested local interaction feedback (PRD §13).
+
+**Preconditions:** Stage 8. **Blocked on your decision** for exact scale/glow parameters (PRD §13/§24) — can proceed with a reasonable placeholder if you'd rather iterate visually than specify numbers up front; flag this choice at stage start.
+
+**What will be implemented:** CSS transition-based (or JS-driven, matching Stage 8's architecture) scale-up and glow/outline on hover, applied to each interactive building's local wrapper transform only (never touching the Stage 7 global transform), with matching smooth hover-out.
+
+**Files likely to be affected:** `styles.css` (hover states/transitions), possibly `main.js` if glow needs JS-driven values.
+
+**Existing elements that must be preserved:** Global movement continues working simultaneously; non-hovered buildings unaffected.
+
+**What must NOT be changed:** Building's base position/size at rest (only the hovered delta changes).
+
+**Dependencies:** Stage 8.
+
+**Risks:** Double-transform conflicts if Stage 8's isolation wasn't fully clean — re-verify here under actual hover.
+
+**Validation method:** Manual hover testing while simultaneously moving the mouse to trigger global movement — confirm both systems animate correctly at once.
+
+**Acceptance criteria:** Hover produces the defined scale/glow smoothly in and out, with no jitter or transform fighting against global movement.
+
+> **SUPERSEDED (2026-08-18)** — a first, deliberately partial hover slice has shipped, at direct user request scoped explicitly to *only* the glow, with scale and cursor changes named as separate future steps (not rejected, just sequenced later). Confirmed/implemented for this slice: a soft warm-gold edge glow via CSS `filter: drop-shadow(...)` (two stacked drop-shadows, tight + wide, `rgba(255,209,128,...)`/`rgba(255,178,90,...)`), toggled by the `is-hovered` class from Stage 8's silhouette hit-testing, with a `0.25s ease` transition (within the requested 0.2–0.3s range) on both hover-in and hover-out. `filter` (not `box-shadow`) was chosen specifically because it renders the glow around the image's real alpha silhouette, not its rectangular box — consistent with Stage 8's hit-testing approach. Explicitly NOT part of this slice: scale-up on hover, and any cursor change — both remain open, unscheduled follow-ups. `prefers-reduced-motion: reduce` disables the filter transition (instant on/off) but does not remove the glow itself, consistent with PRD §21's "keep hover feedback without the scale/motion" framing.
+>
+> **Validated:** automated headless-browser testing (Playwright) confirming (a) hover triggers only within each building's real opaque silhouette, not at transparent corners of its bounding box — tested directly against the Digital Banker building; (b) per-layer parallax `translate3d` continues updating normally while a building is hovered, confirming `filter` and `transform` don't interact; (c) no console errors. Manual cross-browser mouse-feel testing has not been performed.
+>
+> **Definition of Done for this slice:** glow-only hover ships on all 7 interactive buildings with a smooth, silhouette-accurate in/out transition. Full Stage 9 (scale + glow together) remains open until the deferred scale step is scheduled.
+
+> **SUPERSEDED (2026-08-18, follow-up)** — the deferred scale step above has now shipped, at direct user request: a subtle `scale(1.03)` on hover (within the requested ~1.02–1.04 range), still explicitly excluding any cursor change. Architecture, per the user's explicit instruction: scale is **not** applied to `.layer.building` itself (that element already owns the Stage 7 per-frame parallax `translate3d()` — a single `transform` property can't cleanly hold both a JS-driven translate and a CSS-transitioned scale at once). Instead, `index.html` now nests a new `.building-lift` wrapper `<div>` between each `.layer.building` and its `<img>`; `.building-lift` owns `transform: scale(1.03)` on `.is-hovered`, with `transform-origin: 50% 100%` (bottom-center) so the building visually rises off its own base rather than growing from its center. The glow `filter` from the prior slice stays on the outer `.layer.building` — `filter` and `transform` are independent properties, so no wrapper was needed for that part.
+>
+> **Z-index correction (addresses this stage's original "plaza might occlude" risk, in the opposite direction than originally framed):** scaling a building in place can now push its enlarged edges into a neighbor's footprint. Since neighboring buildings' z-index is normally derived from parallax depth (roughly 55–110, Stage 7), a hovered building could previously have ended up *behind* a lower-depth neighbor at that seam once enlarged. `main.js` now temporarily overrides the hovered building's z-index to a fixed `500` (defined once, read by both `layout()` and the hover handlers so a resize mid-hover can't clobber it) — above every normal building z-index, but still below the plaza's fixed `1000`, so the plaza's own foreground compositing over building bases is intentionally left as-is. The override reverts to the building's normal depth-derived z-index on hover-out.
+>
+> **Known limitation:** the Glonari Ancillary building's `.layer` has its own `overflow: hidden` (needed for its existing crop technique — see `.crop-ancillary` in styles.css). That clips part of the hover scale/glow bleed on that one building only (its left edge, nearest the crop boundary, does not fully show the glow); the other 6 buildings are unaffected. Not fixed in this pass — fixing it would mean restructuring the ancillary crop container, which is out of scope for this change.
+>
+> **SUPERSEDED (2026-08-18, second follow-up)** — the limitation above turned out to visibly clip the building's *roofline*, not just a minor edge sliver (reported directly by the user from a screenshot), so it's fixed rather than left as a disclosed trade-off. Root cause: `overflow: hidden` was on `.layer.building-glonari-ancillary` (the parallax-owning element, a fixed-size box), while the hover `scale()` lives one level deeper on `.building-lift` — so the crop window stayed a fixed size while its content scaled up inside it, clipping the enlarged roof at the window's static top edge. Fix: moved `overflow: hidden` off `.layer.building-glonari-ancillary` and onto `.building-glonari-ancillary .building-lift` instead (a building-specific override of the shared `.building-lift` rule) — since the crop window and the `scale()` transform now live on the *same* element, hovering scales the window and its content together, so nothing gets clipped. At rest the crop renders pixel-identical to before (same box, same offsets); on hover the whole building — including the roofline — now enlarges cleanly. Re-validated via Playwright (`.building-lift`'s computed `overflow` is `hidden`, its transform decodes to `scale(1.03)`, hover still reaches `z-index: 500`) and visually via before/after screenshots.
+>
+> **Validated:** automated headless-browser testing (Playwright) confirming (a) the decoded CSS matrix on `.building-lift` is exactly `scale(1.03)` on hover, `none` at rest; (b) `.layer.building`'s own transform stays the untouched parallax translate matrix throughout — scale and parallax never merge into one transform; (c) `transform-origin` resolves to the element's bottom-center; (d) hovered z-index reads `500`, confirmed higher than an adjacent un-hovered building's normal z-index; (e) tested on Digital Banker and Signature Persona Pavilion (screenshots) plus Glonari Ancillary (the `overflow:hidden` edge case) with no console errors; (f) scene-at-rest screenshot confirms zero regression to the Stage 7 parallax/Stage 3 composition. Manual cross-browser mouse-feel testing has not been performed.
+
+**Definition of Done:** Hover effects ship on all confirmed-interactive buildings. ✅ Glow (first slice) + scale (this update) both shipped 2026-08-18; cursor change remains the only explicitly-deferred piece of this stage's original scope.
+
+> **SUPERSEDED (2026-08-18, third follow-up)** — the deferred cursor change has now shipped too, at direct user request, explicitly reusing the Glonari Global Campus reference's own cursor-hover logic rather than a new design: `.cursor-dot` grows from 8px to 64px and switches to a soft translucent gold fill/border on hover (`.cursor-dot.hover` in styles.css, values carried over from the reference's `#cursor.hover`), while `.cursor-ring` fades out at the same time (`.cursor-dot.hover ~ .cursor-ring { opacity: 0; }`, also matching the reference). Trigger condition is this project's own silhouette hit-testing (the same `updateBuildingHover`/`clearBuildingHover` from the note above), not the reference's `pointerenter`/`pointerleave` on real hotspot `<button>` elements — the reference's cursor *reaction* was reused verbatim; only the *trigger wiring* had to differ, since this project has no equivalent DOM elements to attach native pointer events to. Definition of Done for Stage 9 is now fully met: glow + scale + cursor all shipped.
+
+---
+
+## Stage 10 — Click interactions
+
+**Objective:** Wire click behavior on interactive buildings.
+
+**Why this stage exists:** Requested clickable behavior (PRD §14), scoped only to defined elements.
+
+**Preconditions:** Stage 9. **Blocked** on what a click should actually do (PRD §15 — panel/modal content undefined). Until defined, this stage can only wire click detection + a placeholder response (e.g. console log or a bare empty panel shell), not real content.
+
+**What will be implemented:** Click handlers per interactive building; a defined (even if placeholder) response action; keyboard-activatable equivalent (Enter/Space) if the elements are made focusable, per accessibility requirements (PRD §20).
+
+**Files likely to be affected:** `main.js`, possibly `index.html` (tabindex/ARIA roles on interactive buildings).
+
+**Existing elements that must be preserved:** Hover/global movement behavior from prior stages.
+
+**What must NOT be changed:** Non-interactive layers remain unclickable.
+
+**Dependencies:** Stage 9, and content decisions for Stage 11.
+
+**Risks:** Building keyboard accessibility in after the fact is harder than designing it in — flag this now so tabindex/ARIA is added in this stage rather than retrofitted later.
+
+**Validation method:** Manual click + keyboard-activation test per building.
+
+**Acceptance criteria:** Each interactive building responds to click and keyboard activation with its defined action.
+
+**Definition of Done:** Click wiring complete; ready for real panel/modal content in Stage 11.
+
+> **SUPERSEDED (2026-08-18)** — click is now wired directly to a real (if placeholder-content) modal, at direct user request, effectively merging this stage with Stage 11 rather than shipping a bare console-log/empty-shell placeholder first. See Stage 11's matching note below for the modal itself; the click-detection half implemented here: a `click` listener on `.stage-viewport` opens the modal for whichever building `updateBuildingHover`'s silhouette hit-testing currently has as `hoveredBuilding` (so click hit-testing is exactly as precise as hover hit-testing — no separate bounding-box logic). **Not implemented:** keyboard activation (Enter/Space) — buildings are still plain, non-focusable `<div>` layers, not real interactive elements, so this stage's own flagged accessibility risk ("keyboard accessibility... harder after the fact") remains open and unaddressed. This is a real gap against PRD §20, not an oversight being hidden — flagged here explicitly so it isn't lost.
+>
+> **SUPERSEDED (2026-08-18, follow-up)** — the keyboard-activation gap flagged directly above is now closed, at direct user request. Buildings gained `tabindex="0"`/`role="button"`/`aria-label` (index.html); `main.js` gives each one native-`<button>`-equivalent behavior by hand: `focus`/`blur` feed the same `is-hovered` glow+scale+z-index-boost path mouse hover uses (see Stage 8's rollup and Stage 9), and a `keydown` handler treats Enter or Space exactly like a click (`event.preventDefault()` on Space so it doesn't also scroll the page), calling the same `openModal()`. This risk is the one this stage warned about ("keyboard accessibility... harder after the fact") — it did not end up being retrofitted late; it landed one prompt later than click itself, still within the same short window. Verified via Playwright: programmatically focusing Global Connections triggers its glow (`is-hovered`) and `z-index: 500`; pressing Enter opens its modal with the correct title.
+>
+> **SUPERSEDED (2026-09-21)** — Digital Banker (`.building-banker`) is now a deliberate exception to "click/Enter opens the modal": both the click listener and the keydown handler now check a new `NAV_TARGETS` map first (`main.js`), and for Digital Banker that map resolves to a URL instead of falling through to `sectionModal.open()`. The resulting action is `navigateWithFade(url)`: fade `#exit-transition` to opaque (0.5s), then `window.location.href` to `digital-banker/gia/index.html`, leaving this page entirely for the connected Digital-Banker-GIA → Lobby → Global-Reserve sequence. See PRODUCT_REQUIREMENTS.md §14's matching 2026-09-21 note for full detail and what was/wasn't verified this pass (path/asset resolution and script-syntax checks done; live browser walkthrough not done — no browser-automation tool available). The other 6 buildings keep the exact behavior described in the notes above, unchanged.
+>
+> **STATUS (2026-09-21, later same day)** — the live walkthrough flagged above as not done has now been run in Playwright end-to-end: click Digital Banker here → GIA → Lobby → Global Reserve arch → arrival loop → global-reserve/index.html, plus a control click on the Move Money arch confirming it still opens the ordinary modal (see PRODUCT_REQUIREMENTS.md §14's matching STATUS note for full detail, caveats, and the two timing measurements, both within one animation frame of their coded constants). Zero console errors from this hand-off itself. One unrelated real bug was found and fixed in the same pass: `assets/вода.mp4` (referenced index.html:197, part of the plaza fountain, not this stage) was 404ing because the file on disk had a mangled literal filename instead of real Cyrillic — renamed to fix; unrelated to this stage's own click/navigation wiring, noted here only because it surfaced during this stage's walkthrough.
+
+**Definition of Done:** Click wiring complete; ready for real panel/modal content in Stage 11. ✅ Click-to-open wiring shipped 2026-08-18 (mouse only; keyboard activation still open, see note above). ✅ Keyboard activation (Enter/Space, real Tab focusability) shipped 2026-08-18, see follow-up note — Stage 10 now fully done for both input modes. ⚠️ 2026-09-21: Digital Banker's click/keyboard action now diverges from the other 6 (navigates away instead of opening the modal) — see the matching SUPERSEDED note above; not a regression, an intentional new exception. ✅ 2026-09-21, later: this exception's actual browser hand-off verified live end-to-end, see STATUS note above.
+
+---
+
+## Stage 11 — Panels / modals / related UI
+
+**Objective:** Implement real panel/modal UI and content per building.
+
+**Why this stage exists:** Completes the click interaction loop with actual product content.
+
+**Preconditions:** **Fully blocked** until you provide panel/modal content and design requirements (PRD §15, §24). No implementation guessing here.
+
+> **SUPERSEDED (2026-08-18)** — partially unblocked at direct user request: real panel *design* is now implemented (structure and style adapted 1:1 from the Glonari Global Campus reference's `#modal-overlay`/`#modal-card` — backdrop blur, card treatment, gold serif title, close button, all matching that reference's actual CSS values), but real *copy* is still not available, so every building's description is explicit placeholder text (2–3 sentences per building, each marked `// TODO: replace with real copy` in `main.js`'s `BUILDING_CONTENT` object), concept-matched to each building's implied role (News → media/announcements, Pulse → analytics/metrics, Persona Pavilion → flagship/premium, Digital Banker → financial module, Global Dream → member goals/aspirations, Global Connections → networking/community, Ancillary → auxiliary lifestyle services). All copy is in English regardless of the language used to request it, per explicit instruction. Architecture: `#modal-overlay` is a direct child of `<body>`, a sibling of `.stage-viewport` — never nested inside the parallax-transformed `.scene-world` — so it cannot move with the scene regardless of the pointer offset in effect at the moment a building is clicked (verified: moving the pointer, which would normally re-drive parallax, leaves the modal's bounding box pixel-identical while it's open). Building hover/click hit-testing is suspended for the duration (`modalOpen` guard in `main.js`) so the modal doesn't accidentally register hover/clicks on whatever building it visually covers. Closes via the close button, a backdrop (outside-card) click, or Escape — all three adapted directly from the reference's `closeModal()`. **Still blocked:** the real copy itself, and any panel content beyond a title + one paragraph (e.g. imagery, CTAs, deep links) — those remain exactly as undefined as before.
+>
+> **SUPERSEDED (2026-08-18, follow-up) — focus trap + restoration added.** Checked first whether the Glonari Global Campus reference had this to carry over, per instruction: it does not — its `openModal()`/`closeModal()` only move focus in and out (focus the close button on open, restore the triggering hotspot on close), with nothing stopping Tab from leaking past the modal to whatever's next in DOM order. So restoration was carried over (same pattern as the reference's `lastFocusedHotspot`, renamed `lastFocusedBuildingEl` here), and the trap itself was added new: a `keydown` handler active only while `modalOpen`, wrapping Tab/Shift+Tab between the first and last focusable element inside `#modal-card` (currently just the Close button, so both directions simply keep re-focusing it); plus a `focusin` safety net that pulls focus back into the modal if it ever lands outside `#modal-card` by some path other than Tab. This is a lightweight trap (Tab-interception + a focusin backstop), not a full `inert`/`aria-hidden`-on-the-rest-of-the-page isolation — sufficient for the current single-focusable-element modal, worth revisiting if Stage 11's eventual real content adds more interactive elements (links, CTAs) inside the card. Verified via Playwright: pressing Tab or Shift+Tab repeatedly while the modal is open never moves focus outside `#modal-card`; closing via Escape returns focus to the exact building element that opened it.
+>
+> **SUPERSEDED (2026-09-21)** — Digital Banker (`.building-banker`) drops out of this stage's scope going forward: it was re-routed to leave the page entirely instead of opening a modal (see Stage 10's matching 2026-09-21 note), so no panel/modal copy, design, or focus-trap work applies to it anymore. The remaining 6 buildings' modal scope — including the still-outstanding real-copy TODOs — is unchanged.
+
+**What will be implemented:** TBD entirely by your future requirements at that time.
+
+**Files likely to be affected:** TBD.
+
+**Existing elements that must be preserved:** All prior-stage systems (loading, movement, hover, click) must keep working once panels are layered in.
+
+**What must NOT be changed:** TBD.
+
+**Dependencies:** Stage 10, plus new requirements from you.
+
+**Risks:** Unknown until scoped.
+
+**Validation method:** TBD.
+
+**Acceptance criteria:** TBD.
+
+**Definition of Done:** TBD — this stage needs its own mini-requirements pass when it's time.
+
+---
+
+## Stage 12 — Animation and transition refinement
+
+**Objective:** Polish pass across all motion systems built so far (loading transition, global movement, hover transitions, panel/modal animation) for consistency of feel.
+
+**Why this stage exists:** Each prior stage ships its own motion in isolation; this stage checks they feel like one coherent system.
+
+**Preconditions:** Stages 4, 7, 9, 11 complete.
+
+**What will be analyzed:** Consistency of easing curves and durations across systems; any jank when multiple animations run simultaneously (e.g. loading-out transition while movement is also active).
+
+**What will be implemented:** Tuning only — adjusting existing durations/easings, not new features.
+
+**Files likely to be affected:** `styles.css`, `main.js` (constants/config values).
+
+**Existing elements that must be preserved:** All functional behavior from prior stages.
+
+**What must NOT be changed:** No new interactive features introduced here.
+
+**Dependencies:** All motion-producing stages above.
+
+**Risks:** Low — this is refinement, not new surface area.
+
+**Validation method:** Manual side-by-side comparison against the Stage 6 reference feel and internal consistency check.
+
+**Acceptance criteria:** All motion feels part of one coherent system.
+
+**Definition of Done:** Sign-off from visual/motion review.
+
+> ✅ **IMPLEMENTED (2026-08-27)** — Desktop fountain water animation shipped: `.water-video-mask` (a new child of `.layer.plaza`, sized to the same full 2050x799 frame as `.plaza` itself) applies the existing, unmodified `assets/water-mask.svg` via `mask-image`/`mask-size:100% 100%` — the same alignment basis the earlier reverted CSS-shimmer fountain attempt (commit `bab66d7`, reverted in `c2adb62`) used, and the same mask file it left behind on disk. Inside that wrapper, a looping `<video>` (`assets/вода.mp4` — a self-contained CGI render of an already-lit oval pool with its own jets/ripples/rim, flat black outside that oval, no alpha channel) is positioned via plain `left`/`top`/`width` (not `object-fit:cover` against the full frame, which was tried first and zoomed into a compression-artifact band under the video's own pedestal — see the `.water-video` comment in `styles.css` for the measured source coordinates) so the video's own oval graphic lands directly on the mask's pool-ring bounding box; the mask then trims any overflow to the ring's real curve. `autoplay`/`muted`/`loop`/`playsinline`, no controls; paused (not removed) under `prefers-reduced-motion` via a new block in `main.js` reusing the existing `reduceMotionQuery`, consistent with this stage's "one coherent system" objective and PRD §21. The static `plaza.png` (globe, pedestal, GLONARI inscription, marble rim) is unchanged — the video paints only within the mask's pool-ring shape, which already excludes the pedestal's footprint, so nothing needed to be reordered/cut to keep the pedestal in front. Verified via automated headless-browser screenshots (mask alignment against the real scene) and a scripted playback/reduced-motion check, not yet a real-device/browser manual pass. See PRD §23 for the corresponding confirmed-requirement entry.
+
+---
+
+## Stage 13 — Responsive behavior
+
+**Objective:** Validate the full experience (not just the static composition) across relevant viewport sizes.
+
+**Why this stage exists:** Stage 3 validated the static scene; this stage validates it once movement/hover/loading are all present, since those add new failure modes (e.g. Stage 5's headroom at extreme aspect ratios).
+
+**Preconditions:** Stages 4, 7, 9 (10/11 if ready) complete.
+
+**What will be analyzed:** Behavior at narrow desktop widths, ultra-wide desktop widths, and tablet widths; whether Stage 5's mask headroom holds at all of these.
+
+**What will be implemented:** Fixes only if issues are found — no redesign.
+
+**Files likely to be affected:** `styles.css`, possibly `main.js` amplitude constants if they need to scale with viewport.
+
+**Existing elements that must be preserved:** Composition proportions at all sizes.
+
+**What must NOT be changed:** No composition redesign.
+
+**Dependencies:** Prior interactive stages.
+
+**Risks:** Amplitude that's safe at one viewport size might expose edges at another if not made proportional in Stage 5/7.
+
+**Validation method:** Manual test across a matrix of viewport widths.
+
+**Acceptance criteria:** No edge exposure, no broken layout, at any tested width.
+
+**Definition of Done:** Responsive validation passes across the test matrix.
+
+---
+
+## Stage 14 — Mobile / touch behavior
+
+**Objective:** Define and implement what replaces cursor-based movement/hover on touch devices.
+
+**Why this stage exists:** PRD §19 flags this as entirely undefined today.
+
+**Preconditions:** ~~**Blocked on your decision** — no touch behavior should be invented without your input (e.g. static scene, tap-based reveal, device-tilt-based movement).~~ **RESOLVED (2026-08-21)** — decided by you in chat: no precondition remains. See the SUPERSEDED decision block below.
+
+**What will be implemented:** ~~TBD per your decision at that time; likely candidates to discuss: static scene with tap-to-open panels, or a toned-down device-orientation-based movement, or no movement at all on touch (keep it purely a desktop flourish).~~ **RESOLVED (2026-08-21)** — the "static scene with tap-to-open panels" candidate is the accepted answer, with no cursor parallax and no device-tilt movement. Concretely: the mobile static background (currently the flat `mobile/assets/images/glonari-global-mob.png`) gets an overlay of tap-target hit zones, one per building, positioned over that building's location in the static composition. Tapping a zone opens the same `#modal-overlay`/`#modal-card` modal used on desktop (`index.html`, driven today by `main.js`'s `openModal(building)` — see PRD §15/§20), with that building's section content — same modal, same content model as desktop, just reached by tap instead of by hover+click. No hover state exists or is simulated on mobile; a tap goes straight to open.
+
+**Files likely to be affected:** ~~`main.js` (touch/pointer event handling, feature detection), `styles.css` (any touch-specific states).~~ **RESOLVED (2026-08-21)** — those desktop paths don't apply; the actual mobile implementation lives in the separate `mobile/` tree: `mobile/index.html` (tap-zone markup + modal markup, likely ported from root `index.html`'s `#modal-overlay`/`#modal-card`), `mobile/styles.css` (tap-zone positioning/sizing, modal styling), and a new minimal script for `mobile/` (open/close on tap — `main.js`'s parallax/hover logic itself does not port over, only the modal-content/open/close behavior does). Exact file/script structure is an implementation detail for whoever codes this, not a further open decision.
+
+**Existing elements that must be preserved:** Desktop behavior from Stages 7–10 unaffected.
+
+**What must NOT be changed:** ~~TBD.~~ **RESOLVED (2026-08-21)** — no cursor-driven parallax, no per-building hover state (scale/glow), and no device-orientation/tilt movement may be added to mobile, now or later — this decision forecloses that option, it does not just defer it. Desktop's movement/hover system (Stages 7–10) stays mouse-only and untouched. Modal content/copy must stay identical to desktop's (FR-5) — only the trigger (tap vs. hover+click) differs.
+
+**Dependencies:** Stage 13. ~~and your decision on the desired touch behavior~~ — decision made; remaining dependency is implementation only.
+
+> **Interim fix, not Stage 14 (2026-08-18):** Reported bug — on a phone, only one building was visible; the rest of the scene appeared to be "missing." Root cause: the desktop cover-fit in `layout()` (Stage 5/6, PRD §16/§18) is deliberately height-driven and crops most of the composition's width, relying on mouse panning to reveal the rest (§16's "intentionally extends beyond the left/right viewport edges" note) — on a narrow/portrait viewport there is no mouse, so that crop hid 6 of 7 buildings permanently with no way to reveal them.
+>
+> ~~Temporary, minimal patch applied (explicitly requested as non-final, no full responsive/touch redesign): below `max-width: 767px`, `layout()` now computes `scale = viewportWidth / 2050` (fit full logical width) instead of the desktop `max(vw/2050, vh/800) * BLEED` cover formula, so the entire composition — all 7 buildings + plaza — fits within the screen width with no horizontal crop (letterboxed above/below instead). `styles.css` adds a matching `overflow-x: auto` on `.stage-viewport` under the same breakpoint purely as a rounding safety net. Desktop (`> 767px`) formula and rendering are completely untouched.~~
+>
+> **SUPERSEDED (2026-08-18)** — the width-fit patch above was rejected and fully reverted: it shrank the whole scene down to a small, letterboxed horizontal strip, which is not the desired look. Replaced by: mobile now uses the exact same unconditional cover-fit formula as desktop (`scale = max(vw/2050, vh/800) * BLEED`, no breakpoint branch at all in `layout()`). On a portrait phone this renders the scene large enough to fill the viewport's height, with the composition's left/right portions overflowing past the screen edges (clipped by `.stage-viewport`'s existing `overflow: hidden`, no scroll fallback needed) — same mechanism as desktop's own intentional horizontal overflow, just with no mouse available to pan it. Since the pan offset starts at `{0,0}` and nothing moves it on touch, the initial (and only) visible slice is naturally the horizontal center of the composition. `styles.css` has no mobile-specific rule at all now.
+>
+> This still does **not** resolve Stage 14: it makes the existing static composition render large and centered on narrow viewports instead of shrunk, but the composition's edges are still genuinely unreachable on touch (no pan, no tap-to-open — the click handler still depends on `hoveredBuilding`, only ever set by mouse `pointermove`). That real decision — tap-to-reveal vs. device-tilt vs. no movement on touch, per this stage's own options above — is still open and still blocked on your input.
+>
+> **SUPERSEDED (2026-08-21)** — the description above (and PRD §19), that mobile shares the exact same JS cover-fit formula as desktop with no separate files, no longer matches what exists on disk. A standalone `mobile/` directory now contains its own `index.html`, its own `styles.css`, and a single flat, pre-composited image (`mobile/assets/images/glonari-global-mob.png`, 440×956), shown via plain CSS `object-fit: cover` inside a fixed-size `.screen` container — not the JS `scale = max(vw/2050, vh/800) * BLEED` formula described above. There is no `main.js` in `mobile/` at all: no parallax, no pointer/touch movement, no hover, no click, no modal — it is a static picture. Nothing in the root `index.html` or `main.js` links to, redirects to, or otherwise wires visitors into `mobile/`; the two trees are currently disconnected from each other. This correction only brings the documentation in line with what actually exists — it is not an endorsement of this as the final Stage 14 decision. ~~The real touch-behavior decision this stage exists to make (tap-to-reveal vs. device-tilt vs. no movement, per the options above) is still open and still blocked on your input.~~
+>
+> **SUPERSEDED (2026-08-21) — Stage 14 decision: RESOLVED.** You decided the final mobile/touch model in chat: **no cursor parallax on mobile, ever** — not now, not as a future toned-down variant. In its place: the static mobile background (today's flat `mobile/assets/images/glonari-global-mob.png`, or whatever the mobile composition is at implementation time) is overlaid with tap-target hit zones, one per building. Tapping a zone opens the exact same modal used on desktop for that section (`#modal-overlay`/`#modal-card` in `index.html`, opened today via `main.js`'s `openModal(building)` for the desktop hover/click path — see PRD §15/§20) with that building's content. No hover state, no per-building glow/scale, no layer movement of any kind on mobile. This resolves the "static scene? tap-to-reveal? device-tilt?" question this stage was blocked on: the answer is static scene + tap-to-open, device-tilt is explicitly rejected, not deferred.
+>
+> This is a **decision record, not an implementation report** — as of this date, `mobile/` (per the SUPERSEDED note above) still has no tap zones, no modal, and no script at all; it is still just the flat image. Turning this decision into working code (adding the hit zones, porting/wiring the modal, writing the open/close script) is the remaining work for this stage and is not yet done.
+>
+> **IMPLEMENTED (2026-08-21)** — the above decision is now built, not just recorded. The modal's content/open/close/focus-trap logic was extracted out of `main.js` into a new shared module, **`section-modal.js`** (+ **`section-modal.css`** for its styling, previously inlined in `styles.css`), so desktop and mobile call the exact same code instead of mobile re-implementing it — `main.js` was refactored to call `window.SectionModal.create(...)` rather than own a second copy. `mobile/index.html` gained 7 absolutely-positioned `.tap-zone` elements, one per building, each carrying `data-building="building-*"` (the lookup key into `section-modal.js`'s shared `BUILDING_CONTENT`) plus `data-left`/`data-top`/`data-width`/`data-height` — real pixel coordinates measured directly against `glonari-global-mob.png` (440×956), the same convention desktop's `data-left`/`data-width` uses against its own 2050×800 frame. Actual positioning is the matching `.tap-zone-*` percentage rule in `mobile/styles.css` (each with the source pixel numbers in a comment); the `data-*` attributes are kept for the same documentation/future-JS-use reason desktop keeps its own. New `mobile/main.js` wires each zone's click/Enter/Space to `sectionModal.open(key, zone)`. No hover state, no parallax, no device-orientation code exists anywhere in `mobile/`.
+>
+> Verification performed: an automated headless-Chrome/DevTools-Protocol script drove all 7 mobile tap zones and, separately, all 7 desktop buildings (via focus+Enter) — confirmed each opens the modal with the correct title, moves focus to the close button, restores focus to the trigger on close, and that Escape also closes it; zero console exceptions on either page. Tap-zone alignment against the real image was verified visually (pixel-difference crops + a full annotated overlay checked against the source PNG) before being committed as CSS. **Not done: manual testing on a real touch device** (this section's own Validation method) — the automated check exercises the same DOM/JS path a real tap would, but real-device touch-target ergonomics (thumb size, zone spacing) has not been physically confirmed.
+>
+> **SUPERSEDED (2026-08-21, later same day)** — every note above still describes root `index.html` and `mobile/index.html` as two entry points nothing links together ("the two trees are currently disconnected", per this stage's own earlier SUPERSEDED note and PRD §19). That's no longer accurate: root `index.html` now carries a device gate — an inline `<script>` in `<head>`, run right after `<meta name="viewport">` and before any of that page's own stylesheets/assets, checking `window.matchMedia('(max-width: 767px)').matches` and calling `window.location.replace('mobile/index.html')` when true. 767px reuses this stage's own already-established mobile breakpoint rather than inventing a new one; `.replace()` (not `.href`) avoids leaving a back-button entry that would just bounce the visitor into another redirect. Full approach + rationale (why JS over a pure CSS media query, why in `<head>` before other resources, why viewport-width rather than touch/pointer capability, and the deliberate limitations — one-directional only, checked once on load rather than live on resize, no-JS fallback is the desktop scene) is written up in PRODUCT_REQUIREMENTS.md §19, not duplicated here. Verified via headless-browser checks at 375×812 (redirects to `mobile/index.html`) and 1440×900 (stays on `index.html`, `window.SectionModal` still loads) — no real-device check performed, same outstanding gap as this stage's own tap-zone verification above.
+>
+> **SUPERSEDED (2026-08-25, later still) — two of this note's own named limitations closed: "checked once on load, not on resize" and "one-directional only."** Full rationale (why `'change'` over `resize`, the 300ms debounce and why, why the reverse gate is deliberately gated on `(hover: hover) and (pointer: fine)` in addition to width rather than mirroring the forward gate's width-only check, and the accepted imprecision that carries) is in PRODUCT_REQUIREMENTS.md §19, not duplicated here. Summary: `index.html`'s gate now keeps its `MediaQueryList` and reacts live via `'change'`, debounced 300ms on a crossing into mobile width, so a desktop-loaded page that's later resized/rotated narrow without a reload now redirects too. `mobile/index.html` gained a matching reverse gate — checked once on load and live via the same pattern — but requires a fine pointer with hover, not just width, so a phone rotated to landscape (routinely >767px) is never affected; only a genuine mouse/trackpad-driven wide window (e.g. a narrow browser window later widened) redirects to desktop. The third named limitation, "No-JS fallback is the desktop scene," is untouched by either change.
+>
+> **Verification:** headless Chromium (Playwright). Loading `index.html` directly at 430px still redirects immediately, unchanged. Loading at 1440px, then resizing to 430px with no reload, now redirects (previously stayed put). A touch-emulated context (`hasTouch`, `isMobile`) loaded on `mobile/index.html` at 390px, then resized to 844px (simulating a phone rotated to landscape), stayed on the mobile scene — confirming the phone-rotation risk this feature could have introduced does not occur. A non-touch (mouse-capable) context loaded on `mobile/index.html` at 500px, then widened to 1200px, correctly redirected to `index.html`. Resizing an already-open desktop page across wide intermediate widths (800px → 1200px) triggered no redirect. A debounce check — narrowing past 767px and back wide again within the 300ms window, before the pending redirect could fire — confirmed the flicker was cancelled and the page stayed on `index.html`. No design, composition, or interaction logic changed in either scene; both gates remain confined to their own inline `<script>`.
+
+**Risks:** ~~Device-orientation APIs require permission prompts on iOS Safari — a real UX/consent consideration if that direction is chosen.~~ **RESOLVED (2026-08-21)** — moot: device-orientation is rejected, not chosen, so this risk no longer applies. Remaining risk for the accepted approach: tap-zone hit areas must be positioned/sized accurately against the mobile background image and re-validated if that image is ever replaced or re-cropped, or taps will miss their intended building.
+
+**Validation method:** ~~Manual test on real touch devices (not just DevTools device emulation) if orientation APIs are involved.~~ **RESOLVED (2026-08-21)** — manual test on real touch devices (not just DevTools emulation): every tap zone opens the correct building's modal, no zone is missing/misaligned/overlapping a neighbor, and the modal itself (content, close, focus behavior) matches desktop's already-shipped behavior (§20).
+
+**Acceptance criteria:** ~~TBD per chosen behavior.~~ **RESOLVED (2026-08-21):** (1) every building has a tappable hit zone over its location in the mobile static composition; (2) tapping a zone opens `#modal-overlay`/`#modal-card` with that building's content, matching desktop's modal content 1:1; (3) no hover state, no cursor parallax, no device-orientation/tilt movement exists anywhere on mobile; (4) desktop's Stage 7–10 behavior is completely unaffected.
+
+**Definition of Done:** ~~TBD.~~ **RESOLVED (2026-08-21):** all four acceptance criteria above pass manual verification on a real touch device, and this stage's status moves from "decision resolved" to "implemented" once the tap zones + modal wiring actually exist in `mobile/` (they do not yet, as of this decision date).
+> **STATUS (2026-08-21, later same day):** code now exists (see the IMPLEMENTED note above) and criteria (1)–(4) pass automated verification; criterion (4)'s "unaffected" claim is confirmed by the same automated pass re-run against desktop. Stage is **implemented, pending real-device manual verification** — not yet "Done" by this line's own bar, since that bar is specifically manual-device testing, which has not happened.
+>
+> **SUPERSEDED (2026-08-23) — mobile scene rebuilt as layered structure, replacing the flat image.** The single flattened `mobile/assets/images/glonari-global-mob.png` + pixel-coordinate `.tap-zone-*` overlay described above has been removed entirely and replaced with a layered composition built from the same shared source assets desktop's `index.html` uses (`assets/sky.png`, `assets/plaza.png`, `assets/fountain.png`, and the 7 `assets/* frontal.png` building exports) — not a separate mobile-only asset set. Layers, back to front: `.mobile-sky` (full-bleed `assets/sky.png`, `object-fit: cover`) → `.mobile-buildings` (a plain horizontally-scrollable row of all 7 buildings in source order — persona, banker, global-connections, global-dream, glonari-ancillary, glonari-news, pulse — no swipe/carousel logic yet) → `.mobile-plaza` (static `assets/plaza.png`) → `.mobile-fountain` (static `assets/fountain.png`, positioned over the plaza). Plaza and fountain never move or scale with anything above them.
+>
+> Each of the 7 building source PNGs has inconsistent transparent padding and genuinely different real scale from its Figma export. To make them read as a consistent building row: (1) each was **autocropped once to its visible content bounding box** and saved as a static file under `mobile/assets/buildings/*-frontal-cropped.png` (generated from, not replacing, the shared `assets/*` sources — desktop is untouched); (2) each cropped image is placed inside a shared fixed-size `.building-frame` using `object-fit: contain` + `object-position: bottom center`, so every building's visible content touches the same ground line regardless of its own aspect ratio; (3) a per-building CSS `transform: scale()` multiplier is layered on top (`transform-origin: bottom center`, so scaling keeps the bottom edge fixed) — banker 0.90, persona 0.86, global-connections 0.96, glonari-ancillary 0.96, glonari-news 0.98, pulse 0.98, global-dream 1.00 — so the remaining size differences read as intentional rather than accidental.
+>
+> `mobile/main.js` now wires click/Enter/Space on the visible `.building-frame` elements (which carry `data-building="building-*"`, unchanged keys) instead of the old invisible `.tap-zone` overlays — same `sectionModal.open(key, zone)` call, same shared `section-modal.js`/`section-modal.css`, same `#modal-overlay`/`#modal-card` markup, all untouched. Verified visually via headless-browser screenshot at 440×956: all 7 building images load with no 404s/console errors, share the same bottom coordinate (common ground line), and the plaza/fountain render correctly in the lower portion of the screen. **Not yet done, and explicitly out of scope for this pass:** swipe/carousel behavior for the building row (still a plain scrollable strip), and real-device manual touch verification (same outstanding gap noted above, now against the new markup instead of the old tap-zone one).
+>
+> **SUPERSEDED (2026-08-23, later same day) — the plain scrollable building row above is replaced by a real looping carousel, per a reference mockup.** `mobile/index.html`'s `.mobile-buildings` list is gone; `mobile/main.js` was rewritten from scratch around a 9-slide `.carousel-track` (a JS-cloned copy of the last real slide prepended, and of the first real slide appended, around the 7 real `.building-frame` slides in source order) moved via `transform: translateX()` — not native `overflow-x` scrolling, so there is no scrollbar to hide in the first place. One building is always "active" (centered, full scale/opacity via the `.is-active` class combining a per-building `--bldg-scale` custom property with a carousel `--active-scale` one on the same `transform`), its immediate neighbors peek in at the viewport edges (~105px of a 230px slot, ~45%), and the carousel loops seamlessly past both ends (leaving the last real slide and re-landing on it with no animation once a clone slide's transition finishes, so persona → pulse → persona reads as continuous). Prev/next arrow buttons, 7 pagination dots (synced to the active building, direct-jump on click), and pointer-driven drag/swipe paging (a real per-slide snap, with a live-follow transform during the drag and a threshold-based commit/snap-back on release) were added; none of this existed in the prior pass. Verified via headless-browser automation (Chromium, touch-emulated 440×956 viewport): arrow click, dot click, and a CDP-driven touch swipe all move the active building correctly with 0 console errors/404s.
+>
+> The ground-layer source asset changed from `assets/plaza.png` to **`assets/background.png`** (autocropped once to `mobile/assets/background-cropped.png`) — `plaza.png` has its own fountain baked into the artwork, which duplicated against the separate `assets/fountain.png` overlay layer. Screen bands were also tightened to match the reference mockup: sky 0–37%, building carousel 37–63%, ground layer (hedge + pavement) 63–100% — the carousel's box and the ground layer's box share the exact 63% coordinate, so the "no gap between a building's base and the plaza" requirement holds by construction, not by tuned approximation as in the prior pass. Side/¾-angle building imagery for non-active carousel positions (`assets/*.png`, no ` frontal` suffix) is an explicitly deferred follow-up — every slide, active or peeking, still renders its ` frontal.png`-derived cropped source from the prior pass.
+>
+> **Modal wiring is also explicitly deferred for this pass**: tapping a peeking side building re-centers the carousel on it (no modal); tapping the already-active/centered building is a no-op. `#modal-overlay`/`#modal-card` markup and the `section-modal.js`/`section-modal.css` `<script>`/`<link>` includes remain in `mobile/index.html` untouched, just currently undriven by any tap — re-wiring them (open on a *second* tap of the already-active building, most likely) is future work, not done here.
+>
+> **SUPERSEDED (2026-08-23, later still) — two bugs in the pass above, both scaling/proportion issues within the already-correct 0–37/37–63/63–100 band split, fixed:**
+> 1. **Double-shrink on building images.** The active building's `transform: scale()` was multiplying two independent factors together (`--bldg-scale` and a carousel `--active-scale` that only ever evaluated to `1` for the active slide, i.e. a no-op — but the underlying bug the report described was real for *inactive* slides, and separately, `--bldg-scale` values tuned for the old 248px-tall carousel frame no longer matched once the frame height changed per the fix below). Fixed: the active building's image now scales by `--bldg-scale` alone; inactive/side buildings apply one additional `0.6` discount on top of the same `--bldg-scale`, so relative size differences between buildings stay consistent whether a building is active or peeking.
+> 2. **Ground layer force-cropped into an arbitrary box.** `.mobile-plaza` was `height: 37%` (~354px) with `object-fit: cover`, but `mobile/assets/background-cropped.png`'s real content is 440×442px — cover was silently cropping ~88px (20%) of real pavement/steps off the bottom to force the fit, which is what threw the hedge/steps/pavement proportions off against the reference mockup. Fixed: `.mobile-plaza` is now `height: 442px` (the asset's true native size at .screen's fixed 440px width — no cropping, no distortion), and `.carousel`'s `height` was changed from a fixed `26%` to `calc(63% - 442px)` so it still shares the exact same boundary coordinate with the ground layer (zero gap preserved, now computed from the ground layer's real size instead of an independent guess). This incidentally also fixed most of bug 1's visual symptom: the carousel band is now ~160px tall instead of ~248px, and at that shorter height `object-fit: contain` alone brings nearly every building (Banker, Global Connections, Global Dream, Glonari Ancillary, Glonari News, Pulse) to ~100% frame height before `--bldg-scale` is even applied, whereas the taller 248px frame severely letterboxed the two widest/lowest buildings (Persona, Banker) well before any scale factor came into play. `--bldg-scale` values were retuned accordingly: Persona `0.86→1.13` (a genuinely low/wide rotunda, stays width-bound even in the shorter frame, needs >1 to reach a comparable visual height), Banker `0.90→0.96`; Global Connections/Glonari Ancillary/Glonari News/Pulse/Global Dream unchanged. Verified headless: active-building fill lands in the ~90–100%-of-frame-height range across a sample of buildings (Persona, Global Dream, Digital Banker all checked), carousel/ground-layer boundary gap measured at ~0.02px (sub-pixel `calc()` rounding, not a real seam).
+> 3. **Fountain undersized and crowded against the bottom edge.** `.mobile-fountain` was `width: 32%; bottom: 8%`. Bumped to `width: 44%; bottom: 16%` to read as a proper focal element within the now-fully-visible (uncropped) plaza, matching the reference mockup's proportions instead of looking like an afterthought pinned to the screen edge.
+>
+> **SUPERSEDED (2026-08-24) — per-building `--bldg-scale` CSS multipliers removed; relative scale now baked into the source assets.** The 7 `mobile/assets/buildings/*-frontal-cropped.png` files were regenerated (outside this repo, from the same `assets/* frontal.png` sources) onto a single shared 690×780 canvas, bottom-aligned, with each building's real relative scale already reflected in how much of that canvas it occupies — no autocrop-then-CSS-multiplier step is needed anymore. `mobile/styles.css`'s `.building-banker`/`.building-persona`/`.building-global-connections`/`.building-glonari-ancillary`/`.building-glonari-news`/`.building-pulse`/`.building-global-dream` rules (previously setting `--bldg-scale` to 0.96–1.13 per building, see the retuned values two notes above) were deleted entirely, and the `--bldg-scale` custom property itself was removed from `transform: scale(...)` on both `.building-frame img` (active/base) and `.building-frame:not(.is-active) img` (side buildings, now a plain `scale(0.6)` with no multiplied factor). `object-fit: contain` + `object-position: bottom center` on `.building-frame img` are unchanged and still do the per-slot fitting. Desktop assets/markup untouched; only the 7 `mobile/assets/buildings/*-frontal-cropped.png` files and `mobile/styles.css` changed.
+>
+> **SUPERSEDED (2026-08-24, later same day) — the "side/¾-angle building imagery... explicitly deferred follow-up" note two entries above is now resolved.** Each `.building-frame` gained a second `<img class="building-face building-face--angled">` (7 new `mobile/assets/buildings/*-angled.png` sources, same shared 690×780 canvas and bottom alignment as the `*-frontal-cropped.png` files, copied in from the same `buildings/` source folder's un-suffixed `*.png` exports — no separate scale/position correction needed) stacked via `position: absolute; inset: 0` on top of the existing frontal `<img>` inside the same slot. Which face is visible is driven purely by the existing `.is-active` class `main.js` already toggles — no JS changes were needed: `.building-frame.is-active .building-face--frontal { opacity: 1 }` / `...--angled { opacity: 0 }` and the reverse for `:not(.is-active)` (angled side face settling at `opacity: 0.7`, matching the pre-existing side-building dim level, not full opacity), both faces sharing one `transition: opacity 340ms ease` so the swap crossfades instead of cutting. The wrap-around clone slides (`data-clone="true"`, used for the seamless loop past Persona/Pulse) also gained matching angled `<img>`s, since they briefly become `.is-active` mid-loop and need the same two faces. The existing `scale(0.6)`/`saturate(0.85) brightness(0.92)` side-building discount now applies to `.building-face` generally, so it affects whichever face is actually visible rather than being tied to a single always-present `<img>`. Verified headless (Chromium, 440×956): stepped through all 7 buildings via pagination dots — each becomes active with frontal `opacity:1`/angled `opacity:0` and its two peeking neighbors sit at frontal `opacity:0`/angled `opacity:0.7`, 0 console errors, 0 failed image loads; sampled opacity every 40ms during one transition and confirmed both faces pass through genuine intermediate values (not a hard 0/1 cut) over the ~320ms fade. Desktop untouched. **Incidentally discovered, not fixed here:** clicking the pagination dot for the *already-active* building is a same-position no-op in `main.js`'s `goTo()` — since the track's `transform` value doesn't actually change, `transitionend` never fires, so `isAnimating` (set `true` at the top of `goTo()`) never resets to `false`, permanently freezing all further dot/arrow/swipe navigation until reload. Reproduced directly (clicking Persona's own dot while Persona is already active locks the carousel); flagging for a decision on whether/how to fix, since it's outside this task's scope (image sourcing + crossfade wiring only).
+>
+> **SUPERSEDED (2026-08-24, later still) — two targeted visual fixes against a reference mockup (`Glonari-Global-Scene_mob.png`), neither changing carousel size, markup, or interaction wiring:**
+> 1. **Carousel slot spacing.** The gap between the active building and its peeking neighbors read as too wide (bare sky visible between them, not matching the mockup's near-touching buildings). `main.js` gained a distinct `OVERLAP` constant (70) and a derived `STEP = SLOT_WIDTH - OVERLAP` (160) used everywhere `SLOT_WIDTH` previously drove the translateX distance between carousel positions (`render()`'s `tx`, the drag handlers' `dragBaseTx`, the swipe-commit `threshold`) — `SLOT_WIDTH` itself (230, each slot's actual size/`flex-basis`) and `centerOffset`'s formula (which centers the active slot's own box) are untouched, per the "don't touch slot size, only the gap" ask. `styles.css`'s `.building-frame` gained a matching `margin-right: -70px`, pulling each slot 70px closer to the next in the flex flow. 70 was reached empirically against the mockup, then verified against all 7 buildings as both left and right carousel neighbor (headless Chromium screenshots stepping through every position): no building's artwork gets clipped by the overlap at any position, because each building's shared 690×780 canvas carries transparent padding beyond the ~46px margin already guaranteed by the existing 60% side-building scale. Dot-click and drag/swipe paging both verified still functional at the new `STEP`.
+> 2. **Buildings floating above the hedge instead of standing in it.** `.carousel`'s `top` moved from 254px to 274px (a 20px downward shift of the whole carousel band, height unchanged at 260px) — since `.mobile-plaza`'s `z-index: 2` was already above `.carousel`'s `z-index: 1` (this was not a z-index change, just newly-meaningful now that the layers actually overlap), the ground layer's already-opaque top ~20px of pavement/hedge artwork now paints over the lower ~20px of each building, reading as the building's base being embedded in the hedge line rather than sitting flush above it. `.mobile-plaza` itself (`bottom: 0`, `height: 442px`) is unmoved — its top edge stays at the same 514px it was at before, this is purely the carousel band sinking into ground-layer territory that already existed. This breaks the previous "254 + 260 + 442 = 956, exactly" invariant by design (buildings now intentionally extend past the old 514px seam) — the corresponding styles.css comments were updated to describe the new relationship rather than the old sum-to-956 rule.
+> 
+> Verified together via headless Chromium at 440×956 against the reference mockup: neighbor-building gap visibly closed, building bases visibly embedded in the hedge, 0 console errors, all 7 buildings checked individually for both fixes. Desktop untouched (only `mobile/main.js` and `mobile/styles.css` changed). Not addressed here, same outstanding gaps as before: real-device manual verification, and the already-flagged same-position-dot-click freeze bug.
+>
+> **SUPERSEDED (2026-08-24, later still) — bug report: the 70px overlap above closed the gap entirely instead of merely reducing it.** 70px against the 230px `SLOT_WIDTH` (~30% of the slot) left neighboring buildings touching/overlapping with no visible sky between them, reported as "carousel has no gap at all, buildings visually flush/overlapping." This does not contradict the prior note's "no artwork clipping" verification — that check was specifically about `overflow` not cutting off pixels, not about how much visible gap remained between neighbors; both were true at once. Fixed: `main.js`'s `OVERLAP` constant and `styles.css`'s matching `.building-frame { margin-right }` reduced from **70px to 30px** (kept in sync, as before). `top: 274px` (point 2 of the prior fix, the hedge-embedding sink) is untouched, as is `SLOT_WIDTH` (230, unchanged) and all drag/swipe/dot-click logic.
+>
+> **Verification method:** a headless-Chromium script (440×956 viewport) drove the carousel to all 7 dot positions and, for each, measured the actual non-transparent pixel bounds of the active building's frontal image and both peeking neighbors' angled images via canvas alpha-channel scanning (served over a local HTTP server, not `file://`, since `file://`-loaded images taint the canvas and silently short-circuit this measurement) — not just each `.building-frame`'s DOM box edges, which would be misleading given each slide's own transparent canvas padding. Result at 30px: minimum measured gap ~26px, maximum ~54px, across all 14 neighbor pairings (7 buildings × left/right) — every pairing clearly positive (no touching/overlap) and noticeably smaller than the pre-70px (`OVERLAP` 0) spacing, which this same method puts at ~58–79px. The four cut/full-width buildings flagged for extra scrutiny — Pulse, Global Dream, Glonari Ancillary, Glonari News — were each additionally screenshotted individually as both left and right neighbor: no edge clipping, no overlap. Re-verified against the real (non-overridden) `mobile/main.js`/`mobile/styles.css` files by clicking through all 7 real `.carousel-dot` buttons end-to-end: 0 console errors, 0 failed image loads. Desktop untouched — only the two `OVERLAP`/`margin-right` numbers changed. Real-device manual verification and the same-position-dot-click freeze bug remain open, as before.
+>
+> **SUPERSEDED (2026-08-24, later still) — bug report: the same ¾-angled image was reused unmirrored on both peeking sides, so one side necessarily faced the wrong way.** Each building's `*-angled.png` is a single fixed camera render; placed as-is on both the left and right peeking slot, at most one of the two orientations can have the building's front correctly turned toward the centered/active building — the other reads as turning away from it. Fixed in two parts. (1) `main.js`'s `render()` now toggles two additional classes per frame alongside the existing `is-active` — `is-prev` (`i === pos - 1`) and `is-next` (`i === pos + 1`) — identifying which side of the active slide a peeking neighbor sits on; `goTo()`/`STEP`/drag/swipe logic is untouched, this only adds bookkeeping inside the existing `frames.forEach` in `render()`. (2) `styles.css` mirrors `.building-face--angled` with `scale(0.6) scaleX(-1)` (combined in one value, since `transform` isn't additive across cascaded rules — this must also stay later in the cascade than the pre-existing `.building-frame:not(.is-active) .building-face { transform: scale(0.6) }` rule, which it matches in specificity) on `is-next` by default, since that orientation is correct for most of the 7 buildings.
+>
+> **Which side needed the mirror was measured, not eyeballed** — a headless-Chromium script loaded all 7 `*-angled.png` sources into a canvas and alpha-scanned each column, comparing the average opaque pixel height of the leftmost 5–25% of the image's width against the rightmost 75–95% (the vertical edge nearer the camera in a perspective photo reads taller than the farther one, since distance foreshortens height). Result: the 7 renders do **not** share one consistent camera azimuth. Banker (+3.4%), Global Dream (+7.3%), and Glonari Ancillary (+4.6%) were shot from front-right (right edge taller — front correctly reads right-heavy, so unmirrored is-prev / mirrored is-next, the default, is already correct for these three). Global Connections (−2.1%) and Glonari News (−5.6%) were shot from front-**left** instead (left edge taller) — the opposite convention, needing the opposite fix. Persona and Pulse measured within ±1% (near-symmetric/near-frontal shots), so the default is a visual no-op for both either way. Because the source assets themselves are inconsistent, no single global rule could make all 7 face correctly; `styles.css` therefore adds two higher-specificity override rules (one class more specific than the general is-next/is-prev rules, so cascade order doesn't matter) scoped to `.building-frame.building-global-connections` and `.building-frame.building-glonari-news` that reset `is-next` back to unmirrored and mirror `is-prev` instead, for just those two.
+>
+> **Known, disclosed tradeoff (not fixed here):** mirroring flips whatever facade signage text (the building's name) the angled render carries on its front face, so on whichever side ends up mirrored for a given building, that name reads backwards. This is unavoidable with a single 2D render reused for both sides — every one of the 7 angled sources carries that text, so no choice of which side to mirror sidesteps it — and was accepted because the wrong-facing-direction defect this change fixes is more visible at the peeking side's 60%-scale/0.7-opacity size than backward signage text is.
+>
+> **Verification method:** a headless-Chromium script read the computed `transform` of `.building-face--angled` for the active building's `is-prev` and `is-next` neighbor at all 7 dot positions against the real (non-overridden) files, confirming each of the 7 buildings is mirrored on exactly the side the measurement above calls for (e.g. Global Connections mirrored as `is-prev`/unmirrored as `is-next`, Banker the reverse) with no exceptions across all 14 prev/next slots. Also screenshotted all 7 dot positions visually — no clipping, no stretching, no broken imagery — and confirmed 0 console errors/failed image loads clicking through all 7 real `.carousel-dot` buttons end-to-end. Desktop untouched; no markup, drag/swipe, or dot-click logic changed. Real-device manual verification and the already-flagged same-position-dot-click freeze bug remain open, as before.
+>
+> **SUPERSEDED (2026-08-24, later still) — bug report: Pulse was misclassified as near-symmetric above and left out of the front-LEFT override, but it visually reads as a front-LEFT shot (a distinct receding side wall on the image's left edge) same as Global Connections and Glonari News, not a symmetric frame.** The pixel column-height scan this stage's own prior note used to decide that turned out unreliable for Pulse specifically — it was catching decorative clutter (roof-terrace planters/parapet silhouette) at the sampled edge columns rather than the building's actual geometry, not a real >99%-symmetric render. Confirmed by direct visual side-by-side comparison against `global-connections-angled.png` this time, not by re-running that same pixel scan. Fixed: `.building-frame.building-pulse` added alongside `building-global-connections`/`building-glonari-news` in both halves of the front-LEFT override block in `styles.css` — `is-next` reset to unmirrored, `is-prev` mirrored instead — no change to the general is-next-mirrored default rule, `main.js`, desktop, or the carousel's gap/`OVERLAP`. Acceptance bar for this correction is direction only (does each side visibly turn toward the centered building, not the exact angle), per instruction not to re-derive or reconcile rotation degree across buildings. Verified: computed `transform` re-checked for all 14 prev/next slots across all 7 dot positions on the real files — Pulse now mirrored as `is-prev` / unmirrored as `is-next`, matching the same pattern already validated for the other two front-LEFT buildings, with the remaining 6 buildings' transforms unchanged from the prior verification. 0 console errors, no clipping, full visual pass across all 7 dot positions.
+>
+> **SUPERSEDED (2026-08-24, later still) — bug report: every one of the 7 buildings turned away from the centered building on both peeking sides, the opposite of intended, confirmed by direct visual inspection of the live carousel** (not by any of this stage's own prior pixel/visual analysis attempts, both of which had already proven unreliable for this exact question). Fixed by a purely mechanical swap of `is-prev` and `is-next` in every selector of the two rule blocks above — the `transform` values themselves (`scale(0.6)` / `scale(0.6) scaleX(-1)`) are untouched, only which side each applies to changed: the general rule now mirrors `is-prev` instead of `is-next`, and the three-building override (Global Connections, Glonari News, Pulse) now mirrors `is-next` instead of `is-prev`. `main.js`, the frontal/opacity crossfade, the carousel's gap/`OVERLAP`, and desktop are all untouched — this is a `styles.css`-only change confined to the two rule blocks' class names.
+>
+> **Verification:** re-ran the same computed-`transform` check used in the two prior notes and compared it entry-by-entry against its own last run (i.e. the state immediately before this swap) — all 14 prev/next slots (7 buildings × 2 sides) flipped from mirrored to unmirrored or vice versa, with zero exceptions and zero partial cases; this is a complete, uniform reversal of every single slot's orientation, not a subset. Combined with the confirmed premise that all 14 slots were uniformly wrong before this change, a complete toggle of a binary (mirrored/unmirrored) state necessarily produces the opposite (now-correct) orientation at every slot. Also re-confirmed 0 console errors and a full visual pass (no clipping/stretching/broken imagery) clicking through all 7 real `.carousel-dot` buttons end-to-end on the real files. Given this stage's own history of two independently-wrong direction calls on this exact question (a pixel column-height scan, then a "visual comparison" that was itself later found backwards), this fix intentionally does not re-derive the direction from either method — it applies the reporter's own directly-observed correction and verifies the code change is exactly that swap, completely and consistently applied, rather than re-litigating which way is "correct" from static asset analysis.
+>
+> **SUPERSEDED (2026-08-24, later still) — pagination-dots position fix, unrelated to the mirroring work above (same `styles.css` file, different rule).** Reported: `.carousel-dots` (`top: 520px`) sat only 6px below the carousel/ground seam (514px), reading as visually lost right at the border between buildings and hedge instead of clearly on the green. Root cause, found by inspecting the actual `mobile/assets/background-cropped.png` pixels rather than assuming the seam value implied opaque hedge there: the asset has ~10–11px of fully **transparent** padding above its opaque content (alpha 0 through image-relative y≈10, only reaching full opacity by y≈15) — so 520px (6px past the 514px seam) landed the dots in that transparent strip, not on hedge at all, which is exactly why they read as "lost." Below the hedge, a central staircase plus two flanking raised planter curbs (with ball-topiary bushes taller than the curb) cut into the same horizontal span the dots occupy (they're centered, ~108px wide, screen x166–274) starting at image-relative y≈38 — confirmed by testing the originally-suggested 555–575px range first: headless screenshots at all three values showed the dots sitting directly on the cream staircase with the fountain globe intruding into frame, not on hedge, measurably worse than intended. Pixel-sampling the full dots-width strip found the actual clean, uninterrupted, all-green band is image-relative y≈12–37 (screen 526–551) — below y≈38 the staircase/planter curb appears. Fixed: `top: 520px` → **`top: 540px`**. At the dots row's true rendered height (7px — the `.is-active` dot only grows in *width* to 18px, height stays 7px, corrected here from an initial assumption of an 18px-tall row), this centers the row at image-relative y26–33: solidly inside the clean hedge band, ~4px of margin above the staircase/curb lip and clear of the transparent strip above. `gap`, dot size/style, and `z-index: 4` are unchanged; desktop untouched. Verified via headless Chromium (440×956, 3× device scale for a legible zoomed crop): the real `getBoundingClientRect()` of `.carousel-dots` matches exactly (`top: 540, height: 7`), the row reads clearly against solid green hedge with no building/staircase/planter/fountain pixels touching it, and clicking through all 7 real `.carousel-dot` buttons end-to-end produced 0 console errors.
+>
+> **SUPERSEDED (2026-08-24, later still) — real swipe/tap interaction implemented; also corrects the record on the dot-freeze bug this stage's notes above have repeatedly (three separate entries) called "open."** That bug — clicking the pagination dot for the already-active building could permanently freeze `isAnimating` and all further navigation — was in fact already fixed in `mobile/main.js` by a prior, undocumented commit (`4b62ee8`, "444": added the `if (nextPosition === position) return;` guard at the top of `goTo()`, before `isAnimating` is ever set). That commit touched only `mobile/main.js`, never this file, which is why every entry since kept citing the bug as outstanding. Per CLAUDE.md's own definition-of-done rule ("a task that changes previously-documented behavior is not done if the code changed but the docs did not"), this line closes that specific gap — the guard has been in place and working since that commit, independent of everything below it.
+>
+> This pass addresses the actual reported problem with mobile interaction: swipe and tap did not work on a real touch device (only the prev/next arrow buttons did), and tapping a building did nothing even when it should have. Diagnosed as three independent, stacking defects in the carousel built up across the entries above, all confined to `mobile/main.js`/`mobile/styles.css`:
+> 1. **Tap-vs-drag used an exact `dragDeltaX === 0` check.** `onPointerUp()` only recognized "this was a plain tap, not a drag" when the pointer's X movement since `pointerdown` was precisely zero. A real finger (or a real mouse) almost never lands on exactly zero movement, so on a real device this branch was effectively dead code — any nonzero-but-small movement instead fell into the "sub-threshold drag" branch, which set `isAnimating = true` and started a snap-back animation an instant before the browser's own `click` would have fired, and the activation handler's `if (isAnimating) return` guard silently swallowed the tap. Fixed: replaced with a `TAP_MAX_DISTANCE` (10px) threshold checked on both axes.
+> 2. **`.carousel-viewport { touch-action: pan-y }` let the browser contest the gesture.** `pan-y` is the right idiom when a horizontal carousel sits inside a vertically-scrollable page — that isn't the case here: `.screen` is a fixed 440×956 box with nothing to vertically pan in the first place. `pan-y` still gave the browser license to treat a not-perfectly-horizontal touch (the normal case for a real finger's first move) as a native vertical-pan attempt, at which point it can cut the gesture over to `pointercancel` with no scroll actually happening either. `main.js` never called `preventDefault()` to contest that. Fixed: `touch-action: none` — every touch gesture starting on the carousel now reaches `main.js`'s pointer handlers as a full, uninterrupted sequence.
+> 3. **Native image drag-and-drop silently broke mouse-drag testing.** Not previously diagnosed: pressing the mouse down on one of the `.building-face` `<img>` elements and moving it let the browser start its own native image-drag-ghost operation once movement passed a few pixels — from that point on the browser stops delivering any further `mousemove`/`pointermove` to JS at all until the drag ends, regardless of `setPointerCapture`. Confirmed via headless Chromium: an identical scripted mousedown+move+up sequence produced exactly one `pointermove` and zero carousel movement without the fix below, versus one `pointermove` per move step and correct paging with it. Fixed: `-webkit-user-drag: none; user-select: none;` on `.building-face`. Touch was unaffected either way — mobile browsers don't initiate native image DnD from a touch gesture the same way.
+>
+> With swipe/tap actually reaching `main.js`, the modal wiring flagged as explicitly deferred in the 2026-08-23 "Modal wiring is also explicitly deferred" note above is now implemented: tapping the **active/centered** building opens `window.SectionModal` (same shared module, same `#modal-overlay`/`#modal-card` markup, same per-building content as desktop) via a new `activateFrame()`/`openBuildingModal()` pair in `main.js`; tapping a **peeking side** building still just re-centers the carousel on it, unchanged — this satisfies this stage's own Acceptance criterion (2) ("tapping opens the modal with that building's content") for the current carousel markup, which criterion (2) predates and was written against the older tap-zone markup. Tap dispatch for every pointer type (touch, pen, *and* mouse) is now explicit — called directly from `onPointerUp()` when the resolved movement is within `TAP_MAX_DISTANCE` — rather than left to the browser's own compatibility `click`: confirmed via headless Chromium that `viewportEl.setPointerCapture()` (kept, since it's needed so a fast drag that leaves the viewport's bounds keeps being tracked) stops the browser from producing a `click` on the original target at all once a pointer is captured, for mouse as well as touch, not only for touch as initially assumed. The pre-existing per-frame `click` listener is kept as a harmless fallback for callers that activate without going through pointer events at all (e.g. `element.click()` from assistive tech or test code) — `activateFrame()` is idempotent against a redundant second call for the same building either way.
+>
+> A visible touch/press feedback was also added, per explicit request: `.building-frame` gains an `.is-pressed` class (toggled by `main.js`, not the CSS-only `:active` pseudo-class, which iOS Safari won't reliably apply without a `touchstart` listener present — a long-standing WebKit quirk) for as long as the pointer is down on it, producing a quick (140ms) scale-down + brightness lift, cleared the moment movement exceeds `TAP_MAX_DISTANCE` (so a drag across a building never leaves it looking "stuck pressed") or on release. Applies to both the active and peeking positions, since both are valid tap targets (open the modal / re-center).
+>
+> **Circle prev/next arrows are unchanged and still present, but are no longer the only way mobile navigation actually works end-to-end** — with the three defects above fixed, drag/swipe paging and tap-to-open now function as the primary mobile interaction alongside them (arrows were already architecturally optional next to the dots, but swipe itself was non-functional on a real device until this pass, which is what made the arrows read as load-bearing).
+>
+> **Verification performed:** headless Chromium (Playwright), 440×956 viewport with touch emulation enabled — `mobile/` has no automated test suite, so this follows the same ad hoc headless-verification convention as every other entry on this stage. Confirmed: arrow-button and dot navigation unaffected; a scripted mouse-drag (deliberately not a whole multiple of `STEP`, to avoid the coincidental case where a drag's live position exactly matches the destination's resting transform and produces zero style delta) pages the carousel; a real touch tap (Playwright's `locator.tap()`, genuine `touchstart`/`touchend`) on the active building opens the modal with the correct title, and Escape closes it; a synthetic pointer-event tap with a deliberate 2px "tremor" (simulating a real finger's inability to land on exactly zero movement — the original bug's exact failure mode) still opens the modal; tapping a peeking side building re-centers without opening the modal; the `.is-pressed` class is present while the pointer is down and cleared on release; the previously-flagged same-position-dot-click, followed immediately by an arrow click, does not freeze navigation. Desktop (`index.html`/`main.js`/`styles.css` at repo root) is untouched — only `mobile/main.js` and `mobile/styles.css` changed. **Not done, and now the single explicit outstanding gap for this stage's own Definition of Done: manual verification on a real touch device** (not just Chrome DevTools Device Mode, which is what surfaced the original bug report and is exactly the gap that let the `dragDeltaX === 0` and `touch-action: pan-y` defects ship unnoticed in the first place) — confirming swipe paging feels right, the tap-to-open gesture doesn't fight with the OS's own scroll/zoom gestures, and the press feedback reads clearly, on actual hardware. This has been an outstanding gap since 2026-08-21 and must not be skipped again before this stage is called Done.
+>
+> **SUPERSEDED (2026-08-24, later still) — bug report: tapping a peeking neighbor did nothing, specifically (and only) when that neighbor happened to be a wrap-clone slide, not a real building.** The carousel's DOM is 9 slides — a clone of Pulse prepended and a clone of Persona appended, around the 7 real slides (see the 2026-08-23 "real looping carousel" note above) — so with Pulse active, the right-peeking neighbor is the *Persona clone*, not a real slide; symmetrically, with Persona active, the left-peeking neighbor is the *Pulse clone*. Reproduced by resolving `document.elementFromPoint()` at the peeking neighbor's own visible pixels: it returns exactly that clone `<div data-clone="true">`, and clicking it left the active building unchanged. Root cause: two separate, deliberate early-returns in the tap/click handling this stage's own 2026-08-24 pass above introduced — `activateFrame()`'s `if (!frame || frame.dataset.clone === 'true') return;` and the per-frame `click`/`keydown`-listener setup's own `if (frame.dataset.clone === 'true') return;` — both written to keep clones out of the *keyboard* path (correct: they must stay `tabindex="-1"`/`aria-hidden`, not separate content), but as a side effect also blocked them as a *pointer* target, even though they are real, visible pixels a finger/mouse can and does land on. Fixed: both early-returns are removed. `frames.indexOf(frame)` already yields `0` or `REAL_COUNT+1` for a clone — the exact same "clone position" `goTo()` already lands on mid-swipe when dragging past either end (unchanged, pre-existing mechanism) — so tapping a clone now pages the carousel to that same position, which the existing `transitionend` handler then silently resolves to the real slide it stands in for, identical to the swipe path. `i === position` cannot become true for a clone at a moment a tap could reach it (position only equals `0`/`REAL_COUNT+1` while `isAnimating` is true, and `transitionend` reassigns it to the real value in the same tick `isAnimating` clears), so a clone tap can never accidentally route into `openBuildingModal()` — clicking a clone always pages, never opens the modal, matching what tapping the real side building it depicts would do. `tabindex="-1"`/`aria-hidden` on clones (`mobile/index.html`) are untouched, so they remain unreachable via Tab/screen reader; only their pointer/mouse reachability changed. `setPressed()`'s own separate clone check (which suppresses the `.is-pressed` visual feedback on clones) was left as-is — out of scope for this report, which is about navigation, not the press-feedback visual.
+>
+> **Verification:** headless Chromium (Playwright). For both directions — Pulse active → tap the Persona-clone right neighbor, and Persona active → tap the Pulse-clone left neighbor — first confirmed via `document.elementFromPoint()` at the click coordinates (avoiding the prev/next arrow buttons, which visually overlap part of the peeking neighbor's slot near the viewport edge) that the resolved element's nearest `.building-frame` really does carry `data-clone="true"` — i.e. reproducing the exact failure mode from the bug report, not just clicking "somewhere near" the neighbor — then dispatched a real click at that point and confirmed the active building changed to the correct real building (Persona, Pulse respectively) in both directions, via both a mouse click and a genuine touch tap (`page.touchscreen.tap()`). Also confirmed: arrow navigation still works immediately afterward (`isAnimating` not left stuck); tapping a real (non-clone) side building still pages the carousel exactly as before; tapping the active building still opens the modal; clone frames still report `tabindex="-1"` and `aria-hidden="true"`. 0 console errors. Desktop untouched — only `mobile/main.js` changed (`mobile/styles.css` untouched by this fix).
+>
+> **SUPERSEDED (2026-08-24, later still) — bug report: fast repeat swipes were silently dropped, most noticeably right at the wrap-loop boundary.** Root cause: `onPointerDown()` bailed out completely (`if (isAnimating || ...) return;`) whenever a previous swipe/arrow/dot transition was still mid-flight — `isAnimating` is set the instant a swipe commits and only clears on that transition's `transitionend`, ~340ms later — so a new swipe starting before that 340ms elapsed produced zero visual reaction at all, not even a rejected/rubber-banded drag. Reproduced: three fast swipes fired back-to-back with no pause (via synthetic `pointerdown`/`pointermove`/`pointerup`, matching the report) advanced the carousel by only 1 position instead of 3.
+>
+> Two fixes were offered for this — interrupt the in-flight CSS transition and resume the drag from the track's live `getComputedStyle()` position, or queue the swipe's outcome and replay it once the in-flight transition's `transitionend` fires — **the queue was chosen as clearly simpler to implement correctly.** Interrupting mid-flight would need the live-drag math to account for however far the interrupted transition had already progressed (not just this new gesture's own pointer delta), and specifically at the wrap-loop boundary `position` can briefly point at a wrap-clone (`0` or `REAL_COUNT+1`) whose own resting `tx` is numerically unrelated to the real slide it stands in for — correctly reconstructing "where the ribbon really is" mid-interruption right at that boundary is real, boundary-specific complexity the queue avoids entirely, since it never touches the track while a transition owns it.
+>
+> Fixed in `mobile/main.js`: `onPointerDown()` no longer checks `isAnimating` at all. If nothing is animating, it takes live control of the track exactly as before (`activateLiveDrag()`, a small extraction of the pre-existing setup). If a transition **is** in flight, the gesture is still tracked (raw pointer delta, `.is-pressed` feedback) but the track itself is left alone — `onPointerMove` skips the `transform` write while `isAnimating` stays true, and if the in-flight transition happens to finish naturally mid-gesture (a slow drag starting right at the tail of a previous swipe), it promotes to live control right there, re-baselined to the pointer's current position rather than jumping using whatever delta had accumulated while waiting. At `onPointerUp`, if the gesture never went live, its resulting direction (the same `±threshold` check as the existing commit logic, taps excluded — tap-to-open is untouched, still gated by `activateFrame()`'s own pre-existing `isAnimating` check) is pushed onto a `pendingSwipes` array rather than committed directly. `transitionend` drains one entry per firing (`goTo(position + direction, true)`), which starts its own transition and its own future `transitionend` — chaining through as many queued swipes as actually arrived. A single pending slot (rather than an array) was considered and rejected: if two more swipes both complete before the first transition even finishes, a single slot would silently keep only the last of them, reproducing the exact same dropped-swipe symptom this fix is for — the array has no such ceiling, so three (or more) rapid swipes drain one at a time until the queue is empty, each after the other's transition completes. One extra correctness detail: when a queued swipe drains right after a wraparound jump (`position` was just silently reassigned `0→REAL_COUNT` or `REAL_COUNT+1→1` with `transition: none`), starting the next transition in that same synchronous turn risks the browser coalescing the "jump" and the "new transition" writes into one skipped-animation step — `transitionend` forces a reflow (`void track.offsetWidth`) between the two writes to guarantee the queued swipe still animates instead of teleporting.
+>
+> **Second, related bug report addressed in the same pass:** dragging one **continuous** gesture (no release) further than a single slot past either wrap-clone showed empty sky, since the DOM only has 9 slides total (1 clone + 7 real + 1 clone) and nothing renders beyond the last one. Of the two options offered (clamp the live-drag render, or dynamically re-bind clone content mid-drag), the **clamp was chosen** as the simpler, and sufficient, fix: `onPointerMove`'s live-drag branch now clamps the rendered `transform` to the range spanning from the left clone fully centered (`tx = centerOffset`) to the right clone fully centered (`tx = centerOffset - (REAL_COUNT+1) * STEP`) — the track can be dragged all the way to either buffer clone but never past it, so empty space is never exposed regardless of how far or fast the drag travels. The clamp only affects what's rendered mid-drag; the commit decision at `onPointerUp` still reads the real, unclamped total pointer delta, so one continuous gesture still resolves to exactly one step either way, unchanged from before.
+>
+> **Verification:** headless Chromium (Playwright), via real pointer-event simulation (synthetic `PointerEvent` dispatch for direct control over gesture timing, plus a separate CDP `Input.dispatchTouchEvent` pass — a genuine OS-level touch input, not synthetic — as a cross-check), not mouse clicks. Three fast repeat swipes with no pause between them, fired both as synthetic pointer events and as real CDP touch events, advanced the carousel by exactly 3 positions (not 1) starting from a rest position with no wrap involved; the same 3-fast-swipes sequence was also run starting from Pulse swiping forward (crossing 7→clone→1→2→3, landing correctly on Global Connections) and from Persona swiping backward (crossing 1→clone→7→6→5, landing correctly on Glonari Ancillary) — both wrap-boundary directions advance correctly and arrow navigation immediately afterward still works (`isAnimating` never left stuck). For the continuous-drag clamp: a single gesture dragged 2000px past the starting point (roughly 10 slots' worth) had its rendered `transform` sampled at every step and never left the valid `[centerOffset-(REAL_COUNT+1)*STEP, centerOffset]` range; releasing that gesture still committed exactly one step forward, matching the pre-existing single-step-per-gesture behavior. The synthetic-`PointerEvent` runs threw a benign, well-understood `setPointerCapture` `NotFoundError` on each dispatch (a pointer ID synthesized in JS isn't "active" from the browser's own input-pipeline perspective — the same test-harness-only artifact noted in this stage's earlier passes, confirmed non-issue again here since the CDP real-touch cross-check of the same scenario produced 0 console errors with identical results). Desktop untouched — only `mobile/main.js` changed; `mobile/styles.css`, tap-to-open/modal logic, the is-prev/is-next mirroring, and `OVERLAP`/gap sizing are all untouched.
+>
+> **SUPERSEDED (2026-08-25) — two further bugs reported in the same carousel tap-vs-transition/focus system, both fixed, `mobile/main.js`/`mobile/styles.css` only:**
+> 1. **A tap landing entirely inside a previous transition's still-in-flight window was silently dropped**, distinct from (and missed by) the swipe-queueing fix two entries above — that fix only ever pushed a *swipe's* direction onto `pendingSwipes` when `!dragLive`; a plain tap (not a swipe) arriving in that same window fell through the `if (!isTap)` guard and did nothing at all, which read as the carousel "hanging" under fast repeat taps on the active building. Fixed by adding a second, single-slot queue, `pendingTap` (only the most recent tap's target frame matters if several land before the queue drains, unlike `pendingSwipes`'s array, which must preserve every entry), set in the same `!dragLive` branch whenever the gesture resolves to a tap. `transitionend` still drains `pendingSwipes` first, exactly as before, and only calls `activateFrame(pendingTap)` once no swipe remains to replay — `activateFrame()` itself bails out whenever `isAnimating` is true, so calling it while another queued swipe's transition is about to start would just silently drop the tap again.
+> 2. **A gold `:focus-visible` ring (`.building-frame:focus-visible` in `styles.css`) stayed visible after a plain touch tap or mouse click**, intended only for real keyboard (Tab) navigation. Root cause: `viewportEl.setPointerCapture()` (kept — needed so a fast drag leaving the viewport's bounds keeps being tracked, see the 2026-08-24 tap/swipe note above) suppresses the native `click` a plain tap/click would otherwise produce, so on some mobile browsers the `:focus-visible` heuristic — which partly relies on that native click as a signal that focus came from a pointer, not a keyboard or script — guesses wrong and shows the keyboard-only ring anyway. Two fixes were possible: (a) explicitly `blur()` the tapped frame right after a pointer-driven activation, or (b) toggle a dedicated CSS class on pointerdown/blur/Tab-keydown to suppress the ring by interaction source. (a) was chosen: it needs no new state or CSS, and — critically — it's added only at the two call sites inside `onPointerUp` that are provably pointer-driven, never inside the shared `activateFrame()` function itself (which the Enter/Space keydown handler also calls) — so real keyboard activation never runs the `blur()` call and keeps its focus ring exactly as before.
+>
+> **Verification:** headless Chromium (Playwright), touch-emulated 440×956 viewport. Five rapid touch taps on the active building fired 50ms apart (faster than the 340ms transition) correctly opened the modal with the right building's content, confirming the tap queue drains correctly instead of hanging. A touch tap on a peeking (non-active) building, and separately a mouse click on the same, left `document.activeElement` off the tapped `.building-frame` entirely afterward (no lingering focus, hence no ring) in both cases. A real keyboard Tab into a `.building-frame` still matches `:focus-visible` — confirming the fix is scoped to pointer activation only, not a global focus-ring removal. Desktop untouched; only `mobile/main.js` changed (no `mobile/styles.css` changes were needed — the existing `:focus-visible` rule itself was already correct; only how a pointer-driven tap reached focus needed fixing).
+>
+> **SUPERSEDED (2026-08-25, later still) — bug report, measured precisely via Playwright: a single continuous (no-release) drag/swipe gesture hit a hard, silent dead stop.** Two entries above ("Second, related bug report...") this section itself documented, as accepted behavior, that "one continuous gesture still resolves to exactly one step either way [regardless of drag distance]" and that the live-drag render is hard-clamped (`Math.min`/`Math.max`) to the one-full-loop range. Measured precisely: at `SLOT_WIDTH=230`/`OVERLAP=30` (`STEP=200`), the render clamp engages at exactly the drag distance for one full loop (7×`STEP`=1400px from a slide adjacent to a clone) — past that point the track stopped moving entirely, with zero resistance/spring/visual cue, while `pointermove` kept firing normally; releasing anywhere past that point still only ever committed a single step. Both halves of this were reported together as one "the carousel feels stuck" complaint, since a real finger easily travels 1400px+ across a phone screen well before letting go.
+>
+> **Two changes fix this, addressing each half:**
+> 1. **Multi-step commit.** `onPointerUp`'s live-drag commit branch no longer caps at ±1 `goTo()` regardless of distance — it now computes `steps = Math.max(1, Math.floor(dist / STEP))` (the pre-existing `STEP * 0.18` threshold for triggering any commit at all is unchanged, and anything under one full `STEP` still resolves to exactly 1 step, preserving the previously-documented short-swipe behavior exactly). The first step commits immediately via the existing `goTo()`; any remaining steps are pushed onto the same `pendingSwipes` array the fast-repeat-swipe fix (two entries above) already uses, so `transitionend` chains through them one at a time with no new queue or wraparound logic needed. Steps are additionally capped at `maxStepsInDirection` (`REAL_COUNT + 1 - position` forward, `position` backward) — the same one-full-loop-from-here ceiling the render clamp already enforced — so a drag longer than that still lands exactly on the boundary clone, which the pre-existing wraparound then resolves to the matching real slide via its normal animated transition. That cap incidentally also satisfies point 2's "release while past the limit" case with no separate branch: the commit simply can't ask for more steps than physically fit.
+> 2. **Rubber-band damping, replacing the hard render clamp.** `onPointerMove`'s `Math.min(maxTx, Math.max(minTx, rawTx))` hard clamp is replaced with damping: once `rawTx` is past `minTx`/`maxTx`, only a fraction (`RUBBER_BAND_FACTOR`, `0.32`) of the *overflow* past the limit is still applied, so the track keeps visibly — if increasingly slowly — responding to further finger movement instead of stopping dead. A plain linear multiplier on the overflow was chosen over a log/sqrt curve as the simplest formula that reads as "damped, not rubbery." This only changes what's rendered mid-drag; the commit math in point 1 still reads the real, undamped `dragDeltaX`, unchanged.
+>
+> **Verification:** headless Chromium (Playwright), real mouse-drag simulation (`page.mouse.move`/`down`/`up`) rather than synthetic pointer-event dispatch, to exercise the actual browser input pipeline. A short ~120px drag (under one `STEP`) still committed exactly 1 step, confirming no regression on the pre-existing short-swipe behavior. A continuous 600px drag (exactly 3×`STEP`) committed exactly 3 steps. A continuous drag to exactly 1400px (one full loop from the starting slide) produced a rendered `transform` exactly equal to the theoretical `minTx`, confirming the boundary math; continuing to 1700px produced a visibly different (further, damped) `transform` value matching the `RUBBER_BAND_FACTOR` formula exactly, confirming the track keeps responding past the old hard limit instead of freezing. Releasing from a continuous 1700px drag (steps requested: 8, capped to 7, the full loop from the starting position) landed back on the starting building after the queued transitions finished chaining — a full-loop drag correctly returns to its start, smoothly, via the existing animated transition, not an instant snap. Regression-checked against both fixes from the entry above: tapping the active building still opens the modal and leaves no lingering focus/ring; five rapid taps fired 50ms apart during an active transition still open the modal via `pendingTap`, confirming neither the tap queue nor the focus-blur fix were disturbed by this pass. Desktop untouched — only `mobile/main.js` changed (`mobile/styles.css` untouched; the rubber-band effect is driven entirely by the existing CSS transition already used for normal step commits).
+>
+> **SUPERSEDED (2026-08-25, later still) — bug report with a screenshot of Persona active: "this building jumps when active."** Investigated as a possible repeat of the same class of bug as the `banker-frontal-cropped.png`/`banker-angled.png` crop-alignment fix (see §3/Stage 15's asset history) — ruled out first: Persona's frontal and angled PNGs measured pixel-identical via `getbbox()` (0,211,690,780 for both), so this is not an asset-alignment problem. Root cause, confirmed by sampling the computed `transform` matrix of the active building's `.building-face--angled` frame-by-frame during a real activation: it's a `transform` **interpolation** bug, not an asset or layout bug, and it affects every one of the 7 buildings, not just the one in the screenshot. Whichever peeking side is a building's mirrored side (`.building-frame.is-prev .building-face--angled` for the general-rule group — persona, banker, global-dream, glonari-ancillary — or the `is-next` override for global-connections/glonari-news/pulse) carries `transform: scale(0.6) scaleX(-1)`; becoming active removes all transform (no rule sets one for `.is-active .building-face`, so it falls back to the base rule's implicit `none`). The browser's default matrix-decomposition transition doesn't "flip" between these two states — it linearly interpolates the scaleX component itself, from `-0.6` toward `1`, passing directly through `0` partway. Sampled matrices during a real activation showed exactly this: `matrix(-0.6,...)` → `matrix(-0.33,...)` → `matrix(-0.17,...)` → `matrix(0.14,...)` → `matrix(1,...)` — the building visibly squashes to a vertical sliver and un-mirrors, which reads as a "jump."
+>
+> Fixed in `mobile/styles.css` only (no `main.js` change) with two direction-specific, narrowly-scoped `transition` overrides — neither touches the existing `transform` *value* rules, only the timing of the transition for `.building-face--angled` specifically: (1) **Forward** (arriving at active): `.building-frame.is-active .building-face--angled` gets `transition: transform 0s linear 300ms, opacity 340ms ease, filter 260ms ease` — the old transform value holds for the first 300ms of the 340ms activation (no interpolation, so no pass through a squashed state), then snaps instantly once `opacity` (still fading on its own normal curve) has already decayed to a fraction of a percent — sampled and confirmed at &lt;0.6% opacity by the time the snap fires, for every building tested, mirrored side or not. Applied universally (all 7 buildings) rather than only the affected combinations, since by that point in the fade the transform snap is equally imperceptible either way — verified by sampling a known-safe combination (Banker's `is-next` side, never mirrored) and confirming its transform still snaps late with zero visible difference, since it's likewise invisible by then. (2) **Reverse** (leaving active for a peeking slot, opacity rising from 0 instead of falling to 0): the safe window is at the *start*, not the end, so this direction needs `transition: transform 0s linear` (an instant, undelayed snap) scoped *only* to the exact 7 of 14 building+side combinations that are each building's actual mirrored side (matching the two existing `transform`-setting selector groups exactly) — the other 7 safe combinations are deliberately left alone, keeping their existing smooth shrink-while-fading-in animation, since applying the instant-snap treatment there too would have cost a currently-fine, currently-visible animation for no benefit (opacity is rising through the same window where the safe combo's smooth growth is what's actually seen).
+>
+> **Verification:** headless Chromium (Playwright), sampling the computed `transform` matrix of `.building-face--angled` every ~15ms through a real activation transition, for both directions and across all 7 buildings on their own mirrored side (persona/banker/global-dream/glonari-ancillary via `is-prev`→active, global-connections/glonari-news/pulse via `is-next`→active): in every case, the worst (smallest) `|scaleX|` observed while `opacity` was still above 5% was exactly `0.6` — its resting magnitude, never dipping toward 0 — confirming the squash is eliminated everywhere it previously occurred, not just for Persona. The known-safe Banker `is-next`→active combination was also sampled and still shows a continuous (if now slightly delayed) transform, with no regression to how it reads visually. Re-verified tap-to-open (modal opens, no lingering focus ring) and the rapid-tap-during-animation queue (`pendingTap`) both still work, confirming this CSS-only change didn't disturb the unrelated `main.js` interaction fixes from the two entries above. Desktop untouched — only `mobile/styles.css` changed.
+
+---
+
+## Stage 15 — Performance optimization
+
+**Objective:** Address rendering cost, animation-loop efficiency, and asset weight across the whole shipped system.
+
+**Why this stage exists:** PRD §17/§27 flag the ~18.5MB PNG asset weight and animation-loop cost as real risks once the loading screen and movement are both live.
+
+**Preconditions:** Stages 4, 7, 9 complete (there's a working system to profile).
+
+**What will be analyzed:** DevTools performance/network profiling; whether `requestAnimationFrame` work in Stage 7 is doing unnecessary computation per frame; whether image formats/sizes can be reduced without visible quality loss (subject to your approval before any asset is actually replaced, per the "do not replace assets with placeholders" constraint — this would be an explicit, approved optimization pass, not a placeholder swap).
+
+**What will be implemented:** Only after you approve: possibly re-exported/compressed image assets (same visual content, smaller files), animation loop micro-optimizations, `will-change`/compositor hints.
+
+**Files likely to be affected:** `assets/*.png` (only with explicit approval), `main.js`, `styles.css`.
+
+**Existing elements that must be preserved:** Visual fidelity — any asset optimization must be visually indistinguishable from the original.
+
+**What must NOT be changed:** No visual quality regression; no asset replaced with a placeholder.
+
+**Dependencies:** Stages 4, 7, 9.
+
+**Risks:** Over-compressing images could visibly degrade the Figma-accurate composition — must be checked carefully.
+
+**Validation method:** Before/after performance profiling; visual diff of any re-exported asset.
+
+**Acceptance criteria:** Measurable performance improvement with no visible quality loss.
+
+**Definition of Done:** Profiling shows acceptable frame budget; assets (if touched) are visually equivalent.
+
+> **Status update (2026-08-25)** — the asset-weight half of this stage's objective has been executed ahead of its stated preconditions (Stages 4/7/9 are not complete — there is no Loading Screen yet), at explicit user request in the chat/prompt from 2026-08-25; the animation-loop/profiling half remains untouched. What was done: every scene PNG under `assets/` and `mobile/assets/` (25 files, including the 9 in the file tree in §3 plus the mobile carousel/ground/fountain assets) now has a same-name `.webp` sibling — Pillow/libwebp, quality 82, method 6, alpha preserved — wired via a `<picture><source type="image/webp">…<img src="…png"></picture>` element in `index.html` and `mobile/index.html`. Originals were kept as the `<img>` fallback, not deleted or replaced with placeholders, satisfying this stage's "do not replace assets with placeholders" constraint. Every affected `<img>` also gained native `width`/`height` attributes (none existed before) to remove layout-shift risk, and `loading="lazy"` was added to the 6 mobile carousel slides not visible at the carousel's initial resting position (global-connections, global-dream, glonari-ancillary, glonari-news, the non-clone Pulse slide, and the trailing Persona clone) — desktop's scene is a single full-viewport composition with nothing below the fold, so nothing there was made lazy. Composition, positioning, and dimensions were deliberately left unchanged. Result: total image payload across both asset trees fell from ~47.5MB to ~5.97MB (~87.4% smaller). Verified visually via headless-Chromium screenshots of both `index.html` and `mobile/index.html`, and via the dev server's access log confirming the browser fetches the `.webp` source (not the PNG fallback). Actual files touched: `index.html`, `mobile/index.html`, plus new `.webp` files alongside each existing PNG — not `main.js`/`styles.css` as originally anticipated above, since no JS/CSS changes were needed. Also found during this pass, not part of it: 7 root-level `assets/* frontal.png` files (~15MB) are unreferenced by any HTML/CSS/JS in the repo (mobile's own `*-frontal-cropped.png` files under `mobile/assets/buildings/` are the ones actually used) — converted to `.webp` for consistency with the rest of the pass, but left unwired since nothing in the codebase points at them; flagged here rather than deleted, since deletion wasn't requested. Still outstanding for this stage to be fully Done: DevTools performance/network profiling, `requestAnimationFrame` loop efficiency review, and a `will-change`/compositor-hint pass.
+
+---
+
+## Stage 16 — Accessibility / reduced motion
+
+**Objective:** Cross-cutting accessibility pass across all shipped systems.
+
+**Why this stage exists:** Individual stages implement their own reduced-motion branch as they go (per PRD §21); this stage verifies the aggregate result is actually good, not just individually compliant.
+
+**Preconditions:** Stages 4, 7, 9, 10 complete.
+
+**What will be analyzed:** `prefers-reduced-motion` behavior across loading, movement, and hover simultaneously; keyboard navigation path through interactive buildings; screen-reader announcement behavior for loading and (if ready) panels.
+
+**What will be implemented:** Fixes for any gaps found; this is a verification-and-fix stage, not a from-scratch build (the individual reduced-motion branches should already exist from their respective stages).
+
+**Files likely to be affected:** `styles.css`, `main.js`, `index.html` (ARIA attributes).
+
+**Existing elements that must be preserved:** All functional behavior.
+
+**What must NOT be changed:** N/A.
+
+**Dependencies:** Stages 4, 7, 9, 10.
+
+**Risks:** Reduced-motion users should not lose functional information (e.g. hover state) just because animation is off — must degrade to a static-but-clear state, not to nothing.
+
+**Validation method:** OS-level reduced-motion toggle test; keyboard-only navigation test; screen reader spot check.
+
+**Acceptance criteria:** Full functionality available without motion; full functionality available via keyboard.
+
+**Definition of Done:** Accessibility pass signed off.
+
+---
+
+## Stage 17 — Final visual comparison with Figma
+
+**Objective:** Confirm the shipped result still matches the original Figma composition at rest.
+
+**Why this stage exists:** Explicit requirement throughout this request — the Figma design must remain the visual reference and must not have drifted across all the preceding stages.
+
+**Preconditions:** All prior visual-affecting stages complete.
+
+**What will be analyzed:** Side-by-side comparison of the scene at rest (no mouse movement, no hover) against the original Figma frame/export.
+
+**What will be implemented:** Fixes only if drift is found.
+
+**Files likely to be affected:** `styles.css` only, if any fix is needed.
+
+**Existing elements that must be preserved:** Everything.
+
+**What must NOT be changed:** Nothing, ideally — this stage should find zero drift if all prior stages respected their "must preserve" sections.
+
+**Dependencies:** All prior stages.
+
+**Risks:** Low if prior stages were disciplined; this is the safety net.
+
+**Validation method:** Visual diff against Figma reference/export.
+
+**Acceptance criteria:** No unintended visual drift from the original composition.
+
+**Definition of Done:** Sign-off that the at-rest scene matches Figma.
+
+---
+
+## Stage 18 — Final interaction testing and cleanup
+
+**Objective:** End-to-end test of the complete, combined system, and final code cleanup.
+
+**Why this stage exists:** Individual stages test their own feature; this stage is the only point where loading → movement → hover → click → panels → responsive → mobile → reduced-motion are all exercised together, which is where integration bugs actually surface.
+
+**Preconditions:** All prior stages complete.
+
+**What will be analyzed:** Full user journeys combining all systems; console for stray errors/warnings; any dead code or leftover placeholder logic from earlier stages.
+
+**What will be implemented:** Bug fixes and cleanup only — no new features at this point.
+
+**Files likely to be affected:** Any file, as needed for fixes.
+
+**Existing elements that must be preserved:** Everything shipped in Stages 1–17.
+
+**What must NOT be changed:** No new feature scope introduced here.
+
+**Dependencies:** All prior stages.
+
+**Risks:** Integration bugs (e.g. loading-screen transition racing with an early mouse-move) are most likely to appear here.
+
+**Validation method:** Full manual regression pass across devices/viewports/browsers and motion preferences.
+
+**Acceptance criteria:** No known bugs; no console errors; no dead/placeholder code left in.
+
+**Definition of Done:** Project considered complete for this development cycle.
+
+---
+
+## Summary: stage dependency chain
+
+```
+1 Audit → 2 Structure prep → 3 Stabilize
+                                  │
+                                  ├──→ 4 Loading Screen (blocked: design TBD) ──┐
+                                  │                                            │
+                                  └──→ 5 Movement prep → 6 Aircord analysis    │
+                                              │                               │
+                                              └──→ 7 Global movement          │
+                                                        │                     │
+                                                        └──→ 8 Interactive architecture (blocked: which buildings)
+                                                                  │
+                                                                  ├──→ 9 Hover effects
+                                                                  │        │
+                                                                  │        └──→ 10 Click (blocked: what click does)
+                                                                  │                  │
+                                                                  │                  └──→ 11 Panels/modals (blocked: content)
+                                                                  │
+        ┌─────────────────────────────────────────────────────────┴─────────────────────────────┘
+        │
+        └──→ 12 Motion refinement → 13 Responsive → 14 Mobile/touch (implemented 2026-08-21: tap-zones + shared modal — pending real-device test)
+                                                            │
+                                                            └──→ 15 Performance → 16 A11y/reduced-motion
+                                                                        │
+                                                                        └──→ 17 Figma comparison → 18 Final testing/cleanup
+```
+
+Stages marked "blocked" cannot start until the corresponding PRD open question (§24) is answered.
+
+> **SUPERSEDED (2026-08-21)** — Stage 14's label above no longer reads "(blocked: touch UX decision)"; that decision is resolved (see Stage 14 above and PRD §19/§24 item 6), so the diagram now marks it "decided ... not yet implemented" instead of blocked. It is unblocked and ready to be coded, but the tap-zone/modal wiring itself does not exist yet.
+>
+> **SUPERSEDED (2026-08-21, later same day)** — "not yet implemented" is itself now out of date: the tap-zone/modal wiring described above exists (see Stage 14's IMPLEMENTED note), so the diagram label was updated again to "implemented ... pending real-device test" rather than removing this history.
+
+> **SUPERSEDED (2026-08-25, later still)** — the diagram's "4 Loading Screen (blocked: design TBD)" label is now out of date too: that decision was made and built in the same pass (see Stage 4's own IMPLEMENTED note above and PRD §8/§23/§24 item 1), so this node is resolved and implemented, not blocked.

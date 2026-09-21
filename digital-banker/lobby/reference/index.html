@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Glonari — Parallax Demo</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #0b1e3a;
+    overflow: hidden;
+  }
+  .scene {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .layer {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 100vh;
+    width: auto;
+    user-select: none;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .layer.subjects { z-index: 1; } /* пол — нижний, быстрый слой */
+  .layer.wall { z-index: 2; }     /* стены+купол, прозрачный низ — верхний, медленный слой */
+
+  .hint {
+    position: fixed;
+    left: 20px;
+    bottom: 16px;
+    color: rgba(255,255,255,0.55);
+    font: 13px/1.4 system-ui, sans-serif;
+    z-index: 5;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+  <div class="scene" id="scene">
+    <img class="layer subjects" id="subjectsLayer" src="subjects.png" alt="пол и предметы (быстрый слой)">
+    <img class="layer wall" id="wallLayer" src="wall.png" alt="стены и купол, низ прозрачный (медленный слой)">
+  </div>
+
+  <div class="hint">двигай мышью влево-вправо — стены+купол k≈1.0, пол+предметы k≈1.15</div>
+
+<script>
+  // Реальные пиксельные размеры исходных файлов (высота у обоих 900px,
+  // поэтому оба масштабируются по высоте вьюпорта одинаковым коэффициентом)
+  const WALL_W = 3688, WALL_H = 900;
+  const SUBJ_W = 4437, SUBJ_H = 905; // высота пола на 5px больше — см. примечание в чате
+
+  const wallEl = document.getElementById('wallLayer');
+  const subjEl = document.getElementById('subjectsLayer');
+
+  let targetWall = 0, currentWall = 0;
+  let targetSubj = 0, currentSubj = 0;
+  const EASE = 0.07; // чем меньше — тем "плавнее" и инерционнее
+
+  function computeRanges() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const wallRenderedW = vh * (WALL_W / WALL_H);
+    const subjRenderedW = vh * (SUBJ_W / SUBJ_H);
+
+    const rangeWall = Math.max(0, (wallRenderedW - vw) / 2);
+    const rangeSubj = Math.max(0, (subjRenderedW - vw) / 2);
+
+    return { rangeWall, rangeSubj };
+  }
+
+  let ranges = computeRanges();
+  window.addEventListener('resize', () => { ranges = computeRanges(); });
+
+  window.addEventListener('mousemove', (e) => {
+    const normX = (e.clientX / window.innerWidth) * 2 - 1; // -1..1
+    targetWall = -normX * ranges.rangeWall;
+    targetSubj = -normX * ranges.rangeSubj;
+  });
+
+  function tick() {
+    currentWall += (targetWall - currentWall) * EASE;
+    currentSubj += (targetSubj - currentSubj) * EASE;
+
+    wallEl.style.transform = `translateX(calc(-50% + ${currentWall.toFixed(2)}px))`;
+    subjEl.style.transform = `translateX(calc(-50% + ${currentSubj.toFixed(2)}px))`;
+
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+
+</body>
+</html>

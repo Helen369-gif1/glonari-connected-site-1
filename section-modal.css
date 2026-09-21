@@ -1,0 +1,100 @@
+/* ---------- Section modal (shared: desktop index.html + mobile/index.html) ----------
+   Structure and style adapted 1:1 from the Glonari Global Campus
+   reference (#modal-overlay/#modal-card/#modal-close there) — same
+   backdrop blur, card treatment, typography, and close-button styling.
+   Self-contained: defines its own --gold-bright rather than relying on
+   the host page's :root, so this one file works unmodified in both
+   index.html and mobile/index.html.
+   #modal-overlay must be a sibling of the scene/screen container, not a
+   child of it, so it never inherits a parent transform (desktop's
+   parallax) or gets clipped by a parent's overflow:hidden (mobile's
+   fixed-size .screen). */
+#modal-overlay {
+  --gold-bright: #ffe9b8;
+
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 7, 5, 0.45);
+  backdrop-filter: blur(9px) saturate(1.1);
+  -webkit-backdrop-filter: blur(9px) saturate(1.1);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+}
+
+#modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.45s ease, visibility 0s linear 0s;
+}
+
+#modal-card {
+  width: min(480px, 86vw);
+  background: #1a1610;
+  border: 1px solid rgba(217, 184, 119, 0.6);
+  padding: 44px 40px 36px;
+  text-align: center;
+  transform: translateY(14px) scale(0.97);
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) 0.08s, opacity 0.5s ease 0.08s;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+#modal-overlay.active #modal-card {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+#modal-card h2 {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-weight: 400;
+  font-size: 24px;
+  color: var(--gold-bright);
+  letter-spacing: 0.02em;
+  margin-bottom: 14px;
+}
+
+#modal-card p {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(253, 246, 230, 0.72);
+  letter-spacing: 0.01em;
+  margin-bottom: 30px;
+}
+
+#modal-card button {
+  all: unset;
+  cursor: pointer;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  border: 1px solid rgba(217, 184, 119, 0.6);
+  padding: 11px 30px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+#modal-card button:hover {
+  background: rgba(217, 184, 119, 0.12);
+}
+
+#modal-card button:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 3px;
+}
+
+/* Desktop's custom cursor hides the native one everywhere except this
+   button (see the reference's own #modal-card button rule); mobile has
+   no custom cursor at all, so `cursor: pointer` above already covers it
+   and this override is a no-op there. */
+@media (hover: hover) and (pointer: fine) {
+  #modal-card button {
+    cursor: none;
+  }
+}

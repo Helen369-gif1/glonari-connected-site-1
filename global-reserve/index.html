@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GLOBAL RESERVE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/screens.css">
+  <link rel="stylesheet" href="css/reserve-hologram.css">
+  <link rel="stylesheet" href="css/site-shell.css">
+</head>
+<body>
+
+  <!-- Global site shell — fixed header, mobile menu, registration and login dialogs -->
+  <header class="site-header">
+    <div class="container site-header__inner">
+
+      <a class="site-header__brand" href="#screen-1">
+        <img src="media/logo/gr-emblem.png" alt="" aria-hidden="true" class="site-header__emblem">
+        <span class="site-header__wordmark">GLOBAL RESERVE®</span>
+      </a>
+
+      <nav class="site-header__nav" aria-label="Primary navigation">
+        <ul class="site-header__nav-list">
+          <li><a href="#screen-2">Overview</a></li>
+          <li><a href="#screen-3">RED</a></li>
+          <li><a href="#screen-4">Rewards</a></li>
+          <li><a href="#screen-5-5">Reserve</a></li>
+          <li><a href="#screen-7">Gia</a></li>
+        </ul>
+      </nav>
+
+      <div class="site-header__actions">
+        <button type="button" class="site-header__btn site-header__btn--login" data-open-dialog="login-dialog">Log in</button>
+        <button type="button" class="site-header__btn site-header__btn--register" data-open-dialog="register-dialog">Register</button>
+      </div>
+
+      <button type="button" class="site-header__hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="site-mobile-menu">
+        <span class="site-header__hamburger-line" aria-hidden="true"></span>
+        <span class="site-header__hamburger-line" aria-hidden="true"></span>
+        <span class="site-header__hamburger-line" aria-hidden="true"></span>
+      </button>
+
+    </div>
+
+    <div class="site-mobile-menu" id="site-mobile-menu" hidden>
+      <nav class="site-mobile-menu__nav" aria-label="Mobile navigation">
+        <ul>
+          <li><a href="#screen-2">Overview</a></li>
+          <li><a href="#screen-3">RED</a></li>
+          <li><a href="#screen-4">Rewards</a></li>
+          <li><a href="#screen-5-5">Reserve</a></li>
+          <li><a href="#screen-7">Gia</a></li>
+        </ul>
+      </nav>
+      <div class="site-mobile-menu__actions">
+        <button type="button" class="site-header__btn site-header__btn--login" data-open-dialog="login-dialog">Log in</button>
+        <button type="button" class="site-header__btn site-header__btn--register" data-open-dialog="register-dialog">Register</button>
+      </div>
+    </div>
+  </header>
+
+  <dialog class="site-dialog" id="register-dialog" aria-labelledby="register-dialog-title">
+    <button type="button" class="site-dialog__close" data-close-dialog aria-label="Close registration dialog">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false">
+        <line x1="4" y1="4" x2="20" y2="20"></line>
+        <line x1="20" y1="4" x2="4" y2="20"></line>
+      </svg>
+    </button>
+    <h2 class="site-dialog__title" id="register-dialog-title">Create your account</h2>
+    <form class="site-dialog__form" id="register-form" novalidate>
+      <div class="site-dialog__field">
+        <label for="register-name">Full name</label>
+        <input type="text" id="register-name" name="name" required autocomplete="name">
+      </div>
+      <div class="site-dialog__field">
+        <label for="register-email">Email</label>
+        <input type="email" id="register-email" name="email" required autocomplete="email">
+      </div>
+      <div class="site-dialog__field">
+        <label for="register-password">Password</label>
+        <input type="password" id="register-password" name="password" required minlength="8" autocomplete="new-password">
+      </div>
+      <div class="site-dialog__field">
+        <label for="register-confirm-password">Confirm password</label>
+        <input type="password" id="register-confirm-password" name="confirm-password" required minlength="8" autocomplete="new-password" aria-describedby="register-password-error">
+        <p class="site-dialog__error" id="register-password-error" role="alert" hidden>Passwords do not match.</p>
+      </div>
+      <div class="site-dialog__checkbox-field">
+        <input type="checkbox" id="register-agree" name="agree" required>
+        <label for="register-agree">I agree to the <a href="#" class="placeholder-link">Terms</a> and <a href="#" class="placeholder-link">Privacy Policy</a></label>
+      </div>
+      <button type="submit" class="site-dialog__submit">Create Account</button>
+      <p class="site-dialog__result" id="register-result" role="status" hidden>Form validated successfully. No account has been created.</p>
+    </form>
+  </dialog>
+
+  <dialog class="site-dialog" id="login-dialog" aria-labelledby="login-dialog-title">
+    <button type="button" class="site-dialog__close" data-close-dialog aria-label="Close login dialog">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false">
+        <line x1="4" y1="4" x2="20" y2="20"></line>
+        <line x1="20" y1="4" x2="4" y2="20"></line>
+      </svg>
+    </button>
+    <h2 class="site-dialog__title" id="login-dialog-title">Log in</h2>
+    <form class="site-dialog__form" id="login-form" novalidate>
+      <div class="site-dialog__field">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" name="email" required autocomplete="email">
+      </div>
+      <div class="site-dialog__field">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" name="password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="site-dialog__submit">Log in</button>
+      <p class="site-dialog__result" id="login-result" role="status" hidden>Demo only. Sign-in is not connected yet.</p>
+    </form>
+  </dialog>
+
+  <!-- Screen 1 — Hero. Scroll-driven video with per-word text animation. -->
+  <section id="screen-1" data-screen="hero" class="section-performance">
+    <div class="chapters-wrapper">
+      <div class="chapters">
+
+        <!-- Video is loaded via JS as a blob for guaranteed full buffering -->
+        <div class="video-container">
+          <video id="scrub-video" muted playsinline></video>
+        </div>
+
+        <!-- Text overlays for the Global Reserve screen, timed to video progress -->
+        <div class="text-overlay">
+          <div class="text-block text-block-1" id="text-block-1">
+            <p>Global Reserve® — Your Asset Control Center</p>
+          </div>
+          <div class="text-block text-block-2" id="text-block-2">
+            <p>Think of it as the smart hub behind your Glonari participation — one place that tracks your housing payments, rewards, and reserves, so you don't have to juggle them yourself.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 2 — The Question -->
+  <section id="screen-2" data-screen="question">
+    <div class="container screen-question__container">
+
+      <div class="screen-question__text">
+        <h2 class="screen-question__heading">Everyone asks how much they have.<br>Almost nobody can answer how long they're covered.</h2>
+        <p class="screen-question__body">A balance tells you about today. It doesn't tell you how many years your housing is financially covered. Global Reserve answers the second question — it reads everything you hold, everything you owe on housing, and turns it into time.</p>
+        <div class="screen-question__stat">
+          <p class="screen-question__stat-label">Years of housing covered</p>
+          <p class="screen-question__stat-value">8.5 years</p>
+          <p class="screen-question__caption">Your own number depends on what you hold and what you owe.</p>
+        </div>
+      </div>
+
+      <div class="media-slot screen-question__media" data-slot="--media-question" aria-hidden="true">
+        <canvas class="screen-question__canvas" aria-hidden="true"></canvas>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Screen 3 — What RED actually is -->
+  <section id="screen-3" data-screen="red">
+    <div class="container screen-red__container">
+
+      <div class="screen-red__header">
+        <p class="screen-red__eyebrow">THE PART EVERYONE ASKS ABOUT FIRST</p>
+        <h2 class="screen-red__heading">RED isn't money. It's housing, paid forward.</h2>
+      </div>
+
+      <div class="screen-red__card">
+        <div class="media-slot screen-red__media" data-slot="--media-red" aria-hidden="true">
+          <svg class="screen-red__illustration" viewBox="0 0 800 800" aria-hidden="true" focusable="false">
+            <g transform="translate(400,400) scale(1.1) translate(-400,-495)">
+
+              <!-- foundation platform -->
+              <polygon class="screen-red__face screen-red__face--left" points="100,570 460,750 460,700 100,520" />
+              <polygon class="screen-red__face screen-red__face--right" points="700,630 460,750 460,700 700,580" />
+              <polygon class="screen-red__face screen-red__face--top" points="340,400 700,580 460,700 100,520" />
+
+              <!-- corner support post -->
+              <polygon class="screen-red__face screen-red__face--left" points="152,526 168,534 168,444 152,436" />
+              <polygon class="screen-red__face screen-red__face--right" points="184,526 168,534 168,444 184,436" />
+              <polygon class="screen-red__face screen-red__face--top" points="168,428 184,436 168,444 152,436" />
+
+              <!-- core volume -->
+              <polygon class="screen-red__face screen-red__face--left" points="240,510 440,610 440,470 240,370" />
+              <polygon class="screen-red__face screen-red__face--right" points="580,540 440,610 440,470 580,400" />
+              <polygon class="screen-red__face screen-red__face--top" points="380,300 580,400 440,470 240,370" />
+
+              <!-- back support post -->
+              <polygon class="screen-red__face screen-red__face--left" points="524,400 540,408 540,348 524,340" />
+              <polygon class="screen-red__face screen-red__face--right" points="556,400 540,408 540,348 556,340" />
+              <polygon class="screen-red__face screen-red__face--top" points="540,332 556,340 540,348 524,340" />
+
+              <!-- cantilever support post -->
+              <polygon class="screen-red__face screen-red__face--left" points="444,640 460,648 460,508 444,500" />
+              <polygon class="screen-red__face screen-red__face--right" points="476,640 460,648 460,508 476,500" />
+              <polygon class="screen-red__face screen-red__face--top" points="460,492 476,500 460,508 444,500" />
+
+              <!-- cantilevered slab -->
+              <polygon class="screen-red__face screen-red__face--left" points="280,430 460,520 460,460 280,370" />
+              <polygon class="screen-red__face screen-red__face--right" points="580,460 460,520 460,460 580,400" />
+              <polygon class="screen-red__face screen-red__face--top" points="400,310 580,400 460,460 280,370" />
+
+              <!-- top cap -->
+              <polygon class="screen-red__face screen-red__face--left" points="380,360 480,410 480,330 380,280" />
+              <polygon class="screen-red__face screen-red__face--right" points="560,370 480,410 480,330 560,290" />
+              <polygon class="screen-red__face screen-red__face--top" points="460,240 560,290 480,330 380,280" />
+
+              <!-- assembly guides -->
+              <line class="screen-red__guide" x1="340" y1="400" x2="460" y2="240" />
+              <line class="screen-red__guide" x1="100" y1="520" x2="700" y2="580" />
+
+            </g>
+          </svg>
+        </div>
+        <p class="screen-red__body">RED — Real Estate Dollars — are credits that exist for one purpose: covering your housing inside Glonari. Your monthly housing fee comes out of them, and they're what stands behind you when you move on a property. They're used, not traded — which is exactly why they hold their job instead of drifting off into something else.</p>
+      </div>
+
+      <div class="screen-red__lines">
+        <p class="screen-red__line">Made for housing, and nothing else</p>
+        <p class="screen-red__line">Spent as you live, not held as an investment</p>
+        <p class="screen-red__line">The more you hold, the longer you're covered</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Screen 4 — Rewards -->
+  <section id="screen-4" data-screen="rewards">
+    <div class="container screen-rewards__container">
+
+      <h2 class="screen-rewards__heading">When the system saves you money, you keep it.</h2>
+      <p class="screen-rewards__body">Glonari is always looking for a better price, a better term, a smaller fee. When it finds one, the saving doesn't disappear into the platform — it comes back to you as rewards, and those rewards work on the same thing everything else here works on: your housing.</p>
+      <p class="screen-rewards__lead">Nothing to claim. Nothing to chase. It happens whether you're watching or not.</p>
+
+      <div class="media-slot screen-rewards__strip" data-slot="--media-counter" aria-hidden="true">
+        <canvas class="screen-rewards__canvas" aria-hidden="true"></canvas>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Screen 4.5 — scroll-controlled video reveal (Section 5.4a) -->
+  <section id="screen-4-5" data-screen="reveal" class="section-performance">
+    <div class="reveal-wrapper">
+      <div class="reveal-sticky">
+        <div class="reveal-frame">
+          <video class="reveal-video" src="media/reveal-vault.mp4" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
+          <div class="reveal-fallback" data-slot="--media-reveal" aria-hidden="true" hidden>
+            <p>Media pending — media/reveal-vault.mp4</p>
+          </div>
+          <div class="reveal-overlay" aria-hidden="true"></div>
+        </div>
+        <div class="reveal-text">
+          <h2 class="reveal-headline">This is what it's all for.</h2>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 5 — What your reserve is doing right now -->
+  <section id="screen-5" data-screen="states">
+    <div class="container screen-states__container">
+
+      <div class="screen-states__header">
+        <h2 class="screen-states__heading">Your reserve is never just sitting there.</h2>
+        <p class="screen-states__body">At any moment, part of what you hold is free, part is set aside for a home you're working toward, and part is holding a home you already have. Global Reserve labels every piece, all the time, so you always know what you can use and what's already spoken for.</p>
+      </div>
+
+      <div class="state-bar" aria-hidden="true">
+        <div class="state-bar__segment state-bar__segment--ready">
+          <span class="state-bar__label">Ready</span>
+        </div>
+        <div class="state-bar__segment state-bar__segment--committed">
+          <span class="state-bar__label">Committed</span>
+        </div>
+        <div class="state-bar__segment state-bar__segment--reserved">
+          <span class="state-bar__label">Reserved</span>
+        </div>
+        <div class="state-bar__segment state-bar__segment--scheduled">
+          <span class="state-bar__label">Scheduled</span>
+        </div>
+      </div>
+
+      <div class="screen-states__columns">
+        <div class="screen-states__column">
+          <p class="screen-states__column-title">Ready</p>
+          <p class="screen-states__column-text">Free to cover your housing or grow your position.</p>
+        </div>
+        <div class="screen-states__column">
+          <p class="screen-states__column-title">Committed</p>
+          <p class="screen-states__column-text">Held while you work toward a property.</p>
+        </div>
+        <div class="screen-states__column">
+          <p class="screen-states__column-title">Reserved</p>
+          <p class="screen-states__column-text">Holding a home that's already yours.</p>
+        </div>
+        <div class="screen-states__column">
+          <p class="screen-states__column-title">Scheduled</p>
+          <p class="screen-states__column-text">Arriving later, managed for you.</p>
+        </div>
+      </div>
+
+      <p class="screen-states__closing">No hidden totals. No number that means two things at once.</p>
+
+    </div>
+  </section>
+
+  <!-- Screen 5.5 — Reserve Hologram in the Vault (Section 5.5a)
+       Design-system exception: the internal panel below is a near-literal
+       transplant of references/reserve-hologram-panel-source/ (structure,
+       geometry, colors, Roboto type, and decorative assets) per the current
+       task's explicit, scoped exception in GLOBAL-RESERVE-DESIGN-SYSTEM.md.
+       Nothing outside this panel uses Roboto or these coordinates. -->
+  <section id="screen-5-5" data-screen="reserve-demo">
+    <div class="reserve-hologram__wrapper">
+      <div class="reserve-hologram__sticky">
+
+        <div class="reserve-hologram__bg" aria-hidden="true">
+          <img class="reserve-hologram__bg-img" src="media/reserve-hologram-bg.webp" alt="" width="1920" height="1080" loading="lazy">
+        </div>
+
+        <!-- Single 1920x1080 scene: background, panel, beam, and glow all
+             live in one coordinate space so they crop/scale together like
+             one "cover" image and stay pixel-locked to each other. -->
+        <div class="reserve-hologram__stage">
+
+          <div class="reserve-hologram__beam" aria-hidden="true">
+            <svg class="reserve-hologram__beam-svg" viewBox="0 0 380 90" preserveAspectRatio="none" focusable="false">
+              <defs>
+                <linearGradient id="rh-beam-fill" x1="0" y1="0" x2="0" y2="90" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="rgba(130,192,250,0.32)"></stop>
+                  <stop offset="1" stop-color="rgba(226,240,255,0.7)"></stop>
+                </linearGradient>
+                <linearGradient id="rh-beam-core" x1="0" y1="0" x2="0" y2="90" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="rgba(226,240,255,0.12)"></stop>
+                  <stop offset="1" stop-color="rgba(255,255,255,0.9)"></stop>
+                </linearGradient>
+              </defs>
+              <polygon class="reserve-hologram__beam-cone" points="0,0 380,0 208,90 172,90" fill="url(#rh-beam-fill)"></polygon>
+              <polygon class="reserve-hologram__beam-core" points="150,0 230,0 198,90 182,90" fill="url(#rh-beam-core)"></polygon>
+              <line class="reserve-hologram__beam-edge" x1="0" y1="0" x2="172" y2="90"></line>
+              <line class="reserve-hologram__beam-edge" x1="380" y1="0" x2="208" y2="90"></line>
+            </svg>
+          </div>
+
+          <div class="reserve-hologram__base-glow" aria-hidden="true">
+            <div class="reserve-hologram__floor-glow"></div>
+            <div class="reserve-hologram__base-bloom"></div>
+          </div>
+
+          <div class="reserve-hologram__panel">
+
+            <div class="reserve-hologram__panel-bg" aria-hidden="true">
+              <div class="reserve-hologram__panel-bg-glow"></div>
+              <div class="reserve-hologram__panel-bg-gradient"></div>
+            </div>
+
+            <div class="reserve-hologram__panel-clip">
+              <div class="reserve-hologram__panel-container">
+
+                <header class="reserve-hologram__header-block">
+                  <div class="reserve-hologram__header-elements" aria-hidden="true">
+                    <img src="media/reserve-hologram/header-lines.svg" alt="" class="reserve-hologram__header-lines-img">
+                  </div>
+                  <div class="reserve-hologram__header-inner">
+                    <p class="reserve-hologram__eyebrow">GLOBAL RESERVE®</p>
+                    <div class="reserve-hologram__header-text">
+                      <h2 class="reserve-hologram__heading">Your reserve at a glance</h2>
+                      <p class="reserve-hologram__disclaimer">Example interface — not your account.</p>
+                    </div>
+                  </div>
+                </header>
+
+                <div class="reserve-hologram__general-section">
+
+                  <div class="reserve-hologram__left-states">
+                    <div class="reserve-hologram__stat" data-state="ready">
+                      <p class="reserve-hologram__stat-label">Ready</p>
+                      <p class="reserve-hologram__stat-value">$42,800</p>
+                      <p class="reserve-hologram__stat-caption">Free to use today</p>
+                    </div>
+                    <div class="reserve-hologram__stat" data-state="scheduled">
+                      <p class="reserve-hologram__stat-label">Scheduled</p>
+                      <p class="reserve-hologram__stat-value">90 days</p>
+                      <p class="reserve-hologram__stat-caption">Arriving on its own timeline</p>
+                    </div>
+                  </div>
+
+                  <div class="reserve-hologram__ring">
+                    <div class="reserve-hologram__ring-circle" aria-hidden="true">
+                      <img src="media/reserve-hologram/progress-ring.svg" alt="" class="reserve-hologram__ring-img">
+                    </div>
+                    <div class="reserve-hologram__ring-text">
+                      <p class="reserve-hologram__ring-percent">82%</p>
+                      <p class="reserve-hologram__ring-label">Ready</p>
+                    </div>
+                  </div>
+
+                  <div class="reserve-hologram__right-states">
+                    <div class="reserve-hologram__stat" data-state="reserved">
+                      <p class="reserve-hologram__stat-label">Reserved</p>
+                      <p class="reserve-hologram__stat-value">$18,000</p>
+                      <p class="reserve-hologram__stat-caption">Holding a home you already have</p>
+                    </div>
+                    <div class="reserve-hologram__stat" data-state="committed">
+                      <p class="reserve-hologram__stat-label">Committed</p>
+                      <p class="reserve-hologram__stat-value">78%</p>
+                      <p class="reserve-hologram__stat-caption reserve-hologram__stat-caption--narrow">Toward a property you're<br>working on</p>
+                    </div>
+                  </div>
+
+                  <div class="reserve-hologram__divider reserve-hologram__divider--left" aria-hidden="true">
+                    <img src="media/reserve-hologram/divider-lines.svg" alt="" class="reserve-hologram__divider-img">
+                  </div>
+                  <div class="reserve-hologram__divider reserve-hologram__divider--right" aria-hidden="true">
+                    <img src="media/reserve-hologram/divider-lines.svg" alt="" class="reserve-hologram__divider-img">
+                  </div>
+
+                </div>
+
+                <footer class="reserve-hologram__footer">
+                  <p class="reserve-hologram__footer-text">Explore the example</p>
+                  <img src="media/reserve-hologram/footer-underline.svg" alt="" class="reserve-hologram__footer-underline-img">
+                </footer>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 6 — The path to a home -->
+  <section id="screen-6" data-screen="path">
+    <div class="container screen-path__container">
+
+      <div class="screen-path__split">
+        <div class="media-slot screen-path__media" data-slot="--media-home">
+          <img class="screen-path__img" src="media/home.png" alt="A modern hillside villa with an infinity pool overlooking the coast at sunset" width="1254" height="1254" loading="lazy">
+        </div>
+
+        <div class="screen-path__text">
+          <h2 class="screen-path__heading">A home here doesn't start with a signature.<br>It starts with holding steady.</h2>
+          <p class="screen-path__body">Before you take on a property, you go through a qualifying period: you set aside what's required and you keep it there. That's it. No credit theatre, no paperwork marathon — the proof is that you held your position. Global Reserve runs the clock, watches the threshold, and shows you the home you're working toward the whole way through.</p>
+        </div>
+      </div>
+
+      <ol class="screen-path__stepper">
+        <li class="screen-path__step">
+          <span class="screen-path__step-marker" aria-hidden="true"></span>
+          <span class="screen-path__step-label">Choose the home you're working toward</span>
+        </li>
+        <li class="screen-path__step">
+          <span class="screen-path__step-marker" aria-hidden="true"></span>
+          <span class="screen-path__step-label">Set aside what it requires</span>
+        </li>
+        <li class="screen-path__step">
+          <span class="screen-path__step-marker" aria-hidden="true"></span>
+          <span class="screen-path__step-label">Hold — and watch the days come down</span>
+        </li>
+        <li class="screen-path__step">
+          <span class="screen-path__step-marker" aria-hidden="true"></span>
+          <span class="screen-path__step-label">Qualify, and move</span>
+        </li>
+      </ol>
+
+      <p class="screen-path__note">If your position slips below what's required, the clock resets. You'll hear about it early, while it's still easy to fix.</p>
+
+    </div>
+  </section>
+
+  <!-- Screen 7 — Gia -->
+  <section id="screen-7" data-screen="gia" class="screen-gia">
+    <div class="screen-gia__wrapper">
+      <div class="screen-gia__sticky">
+        <div class="container screen-gia__container">
+
+          <div class="screen-gia__media">
+            <video class="screen-gia__video" src="media/gia.mp4" poster="media/gia-poster.jpg" muted playsinline preload="metadata" aria-hidden="true"></video>
+            <div class="screen-gia__messages">
+              <p class="screen-gia__message" data-gia-message="1">"Your housing is covered into the mid-2030s."</p>
+              <p class="screen-gia__message" data-gia-message="2">"Nothing needs your attention today."</p>
+            </div>
+          </div>
+
+          <div class="screen-gia__text">
+            <p class="screen-gia__eyebrow">THE PART THAT THINKS</p>
+            <h2 class="screen-gia__heading">Gia isn't a chat window. She's the reason this feels simple.</h2>
+            <p class="screen-gia__body">Gia is the intelligence running underneath Global Reserve. She's mostly invisible, and that's the point — you should be living your life, not administering it.</p>
+
+            <div class="screen-gia__items">
+              <div class="screen-gia__item">
+                <p class="screen-gia__item-title">She explains.</p>
+                <p class="screen-gia__item-text">Every change gets one sentence in plain language. Not a log entry, an answer: "At your current position, your housing is covered into the mid-2030s."</p>
+              </div>
+              <div class="screen-gia__item">
+                <p class="screen-gia__item-title">She watches.</p>
+                <p class="screen-gia__item-text">If your qualifying position starts drifting toward trouble, you hear it while it's still small.</p>
+              </div>
+              <div class="screen-gia__item">
+                <p class="screen-gia__item-title">She handles.</p>
+                <p class="screen-gia__item-text">Your monthly housing fee is taken care of in the background. No transfers, no reminders, no late anything.</p>
+              </div>
+              <div class="screen-gia__item">
+                <p class="screen-gia__item-title">She looks ahead.</p>
+                <p class="screen-gia__item-text">She keeps an eye on what your housing will need later and quietly keeps your position moving in that direction.</p>
+              </div>
+              <div class="screen-gia__item screen-gia__item--wide">
+                <p class="screen-gia__item-title">She marks the moments.</p>
+                <p class="screen-gia__item-text">First foundation. First qualification. First home secured. Years of work shouldn't end up as a line in a transaction list.</p>
+              </div>
+            </div>
+
+            <p class="screen-gia__closing">Gia never moves anything without your permission. She just makes sure you never have to guess.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 8 — Transparency -->
+  <section id="screen-8" data-screen="transparency">
+    <div class="container">
+      <div class="screen-transparency__header">
+        <h2 class="screen-transparency__heading">Nothing happens quietly.</h2>
+        <p class="screen-transparency__body">Every movement in your reserve is written down the moment it happens, with the date and the reason attached. Not a statement that arrives at the end of the month — a history you can open right now, at two in the morning, for no reason at all.</p>
+      </div>
+    </div>
+
+    <div class="ticker">
+      <div class="ticker__track">
+        <ul class="ticker__list">
+          <li class="ticker__item">Housing fee covered</li>
+          <li class="ticker__item">Rewards earned</li>
+          <li class="ticker__item">Position committed</li>
+          <li class="ticker__item">Qualification started</li>
+          <li class="ticker__item">Qualification complete</li>
+          <li class="ticker__item">Home reserved</li>
+          <li class="ticker__item ticker__item--repeat" aria-hidden="true">Housing fee covered</li>
+          <li class="ticker__item ticker__item--repeat" aria-hidden="true">Rewards earned</li>
+          <li class="ticker__item ticker__item--repeat" aria-hidden="true">Position committed</li>
+          <li class="ticker__item ticker__item--repeat" aria-hidden="true">Qualification started</li>
+          <li class="ticker__item ticker__item--repeat" aria-hidden="true">Qualification complete</li>
+          <li class="ticker__item ticker__item--repeat" aria-hidden="true">Home reserved</li>
+        </ul>
+        <ul class="ticker__list" aria-hidden="true">
+          <li class="ticker__item">Housing fee covered</li>
+          <li class="ticker__item">Rewards earned</li>
+          <li class="ticker__item">Position committed</li>
+          <li class="ticker__item">Qualification started</li>
+          <li class="ticker__item">Qualification complete</li>
+          <li class="ticker__item">Home reserved</li>
+          <li class="ticker__item ticker__item--repeat">Housing fee covered</li>
+          <li class="ticker__item ticker__item--repeat">Rewards earned</li>
+          <li class="ticker__item ticker__item--repeat">Position committed</li>
+          <li class="ticker__item ticker__item--repeat">Qualification started</li>
+          <li class="ticker__item ticker__item--repeat">Qualification complete</li>
+          <li class="ticker__item ticker__item--repeat">Home reserved</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 10 — CTA -->
+  <section id="screen-10" data-screen="cta">
+    <video class="screen-cta__video" src="media/cta-vault.mp4" autoplay muted loop playsinline preload="metadata" poster="media/cta-vault-poster.jpg" aria-hidden="true" tabindex="-1"></video>
+    <div class="screen-cta__overlay" aria-hidden="true"></div>
+
+    <div class="container screen-cta__container">
+      <h2 class="screen-cta__heading">You don't need a plan yet.<br>You just need to see where you stand.</h2>
+      <p class="screen-cta__body">Open Global Reserve and you'll see how long you're covered, what's already working for you, and what the next step looks like — with Gia already watching the parts you'd rather not think about.</p>
+      <div class="screen-cta__actions">
+        <a class="screen-cta__btn screen-cta__btn--primary" href="#">Open Your Reserve</a>
+        <a class="screen-cta__btn screen-cta__btn--secondary" href="#">Talk to Gia First</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+
+      <img class="site-footer__logo" src="media/logo/gr-full-lockup.png" alt="GLOBAL RESERVE® — SECURE TODAY. EMPOWER TOMORROW." width="967" height="245" loading="lazy">
+
+      <nav class="site-footer__nav" aria-label="Footer navigation">
+        <ul>
+          <li><a href="#screen-2">Overview</a></li>
+          <li><a href="#screen-3">RED</a></li>
+          <li><a href="#screen-4">Rewards</a></li>
+          <li><a href="#screen-5-5">Reserve</a></li>
+          <li><a href="#screen-7">Gia</a></li>
+          <li><a href="#" class="placeholder-link">Terms</a></li>
+          <li><a href="#" class="placeholder-link">Privacy</a></li>
+        </ul>
+      </nav>
+
+      <div class="site-footer__social">
+        <a href="#" class="placeholder-link site-footer__social-link" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false">
+            <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+            <circle cx="12" cy="12" r="4.2"></circle>
+            <circle cx="17.2" cy="6.8" r="0.9" fill="currentColor" stroke="none"></circle>
+          </svg>
+        </a>
+        <a href="#" class="placeholder-link site-footer__social-link" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false">
+            <rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+            <circle cx="7.5" cy="8" r="1.1"></circle>
+            <rect x="6.6" y="10.5" width="1.8" height="7"></rect>
+            <path d="M10.8 10.5h1.8v1c.6-.8 1.5-1.2 2.5-1.2 2 0 3 1.3 3 3.7v3.5h-1.8v-3.2c0-1.2-.5-2-1.6-2-.9 0-1.5.6-1.7 1.2-.1.2-.1.5-.1.8v3.2h-1.8v-7z"></path>
+          </svg>
+        </a>
+        <a href="#" class="placeholder-link site-footer__social-link" aria-label="X">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false">
+            <line x1="4" y1="4" x2="20" y2="20"></line>
+            <line x1="20" y1="4" x2="4" y2="20"></line>
+          </svg>
+        </a>
+        <a href="#" class="placeholder-link site-footer__social-link" aria-label="YouTube">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false">
+            <rect x="3" y="6" width="18" height="12" rx="3"></rect>
+            <path d="M10 9.5L15 12L10 14.5Z" fill="currentColor" stroke="none"></path>
+          </svg>
+        </a>
+      </div>
+
+      <p class="site-footer__legal">Global Reserve is part of the Glonari platform. This page is for product information only and is not a statement of account.</p>
+      <p class="site-footer__copyright">© 2026 Global Reserve</p>
+
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="js/scrub.js"></script>
+  <script src="js/video-reveal.js"></script>
+  <script src="js/timescale.js"></script>
+  <script src="js/counter.js"></script>
+  <script src="js/reserve-hologram.js"></script>
+  <script src="js/gia.js"></script>
+  <script src="js/ticker.js"></script>
+  <script src="js/site-shell.js"></script>
+</body>
+</html>

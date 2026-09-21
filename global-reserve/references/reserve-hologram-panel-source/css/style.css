@@ -1,0 +1,362 @@
+/* ==========================================================================
+   Global Reserve — Hologram Panel
+   Точная реализация фрейма Figma (node-id 7460:21105, Screen_5_5_Desktop)
+   Базовый холст: 1920 x 1080. Корневой фон остаётся прозрачным.
+   ========================================================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  background: transparent;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ------------------------------------------------------------------------
+   Stage: масштабируемый холст 1920x1080.
+   На ширине >=1920px масштаб = 1 (точное соответствие Figma).
+   На меньших экранах холст пропорционально уменьшается через JS (scale).
+   ------------------------------------------------------------------------ */
+
+.stage-outer {
+  position: relative;
+  width: 100%;
+  max-width: 1920px;
+  aspect-ratio: 1920 / 1080;
+  overflow: hidden;
+  background: transparent;
+}
+
+.stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: top left;
+  background: transparent;
+}
+
+/* ------------------------------------------------------------------------
+   Hologram_Panel_Desktop  (400, 206, 1119x599 внутри холста 1920x1080)
+   ------------------------------------------------------------------------ */
+
+.hologram-panel {
+  position: absolute;
+  left: 400px;
+  top: 206px;
+  width: 1119px;
+  height: 599px;
+}
+
+/* background */
+.panel-bg {
+  position: absolute;
+  inset: 0;
+  width: 1119px;
+  height: 599px;
+}
+
+/* Rectangle 34626156 — рамка со свечением (без заливки) */
+.panel-bg-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  border: 3px solid #82C0FA;
+  filter:
+    drop-shadow(0 0 25.202px #ffffff)
+    drop-shadow(0 0 14.401px #ffffff)
+    drop-shadow(0 0 8.401px #ffffff)
+    drop-shadow(0 0 4.2px #ffffff)
+    drop-shadow(0 0 1.2px #ffffff)
+    drop-shadow(0 0 0.6px #ffffff);
+}
+
+/* Rectangle 34626155 — рамка + радиальный градиент-заливка */
+.panel-bg-gradient {
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  border: 3px solid #82C0FA;
+  background-image: url('../assets/panel-gradient-bg.svg');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/* Слой обрезает контент по форме скруглённой панели (1119x599, radius 15px),
+   не затрагивая внешнее свечение рамки (оно рендерится в .panel-bg-glow). */
+.panel-clip {
+  position: absolute;
+  inset: 0;
+  width: 1119px;
+  height: 599px;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+/* container (67, 25, 1028x554) */
+.panel-container {
+  position: absolute;
+  left: 67px;
+  top: 25px;
+  width: 1028px;
+  height: 554px;
+}
+
+/* ------------------------------------------------------------------------
+   header block (60, 0, 865x134)
+   ------------------------------------------------------------------------ */
+
+.header-block {
+  position: absolute;
+  left: 60px;
+  top: 0;
+  width: 865px;
+  height: 134px;
+}
+
+.header-elements {
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 865px;
+  height: 1px;
+}
+
+.header-lines-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.header-inner {
+  position: absolute;
+  left: 166px;
+  top: 0;
+  width: 517px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.header-eyebrow {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 4.14px;
+  color: #F7C37B;
+  width: 100%;
+}
+
+.header-text {
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.header-title {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+  font-size: 48px;
+  color: #FFFFFF;
+  width: 100%;
+}
+
+.header-subtitle {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  color: #8DA3B9;
+  width: 100%;
+}
+
+/* ------------------------------------------------------------------------
+   General Section (0, 147, 1028x340)
+   ------------------------------------------------------------------------ */
+
+.general-section {
+  position: absolute;
+  left: 0;
+  top: 147px;
+  width: 1028px;
+  height: 340px;
+}
+
+/* Left_States (19, 18, 241x312) */
+.left-states {
+  position: absolute;
+  left: 19px;
+  top: 18px;
+  width: 241px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 56px;
+}
+
+/* Right_States (733, 18, 295px) */
+.right-states {
+  position: absolute;
+  left: 733px;
+  top: 18px;
+  width: 295px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 33px;
+}
+
+.stat-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.stat-label {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+  font-size: 26px;
+  line-height: 1.5;
+  color: #FFFFFF;
+}
+
+.stat-value {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+  font-size: 44px;
+  line-height: 1.5;
+  color: #F8C47B;
+  white-space: nowrap;
+}
+
+.stat-caption {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: normal;
+  color: #8DA3B9;
+}
+
+.stat-caption--narrow {
+  width: 229px;
+}
+
+/* Progress ring (331, 0, 331x332) */
+.progress-ring {
+  position: absolute;
+  left: 331px;
+  top: 0;
+  width: 331px;
+  height: 332px;
+}
+
+.progress-ring-circle {
+  position: absolute;
+  inset: 0;
+  width: 331px;
+  height: 332px;
+}
+
+.progress-ring-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.progress-ring-text {
+  position: absolute;
+  left: 81px;
+  top: 101px;
+  width: 169px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.progress-percent {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+  font-size: 90px;
+  line-height: 1;
+  color: #F8C47B;
+  width: 100%;
+}
+
+.progress-label {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+  font-size: 26px;
+  line-height: 1.5;
+  color: #FFFFFF;
+  width: 100%;
+}
+
+/* decorative dividers "элементы" (288 x 338) */
+.divider-elements {
+  position: absolute;
+  top: 1.5px;
+  width: 287.5px;
+  height: 338px;
+}
+
+.divider-elements--left {
+  left: 0;
+}
+
+.divider-elements--right {
+  left: 985.5px;
+  transform: scaleX(-1);
+}
+
+.divider-lines-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ------------------------------------------------------------------------
+   footer (398, 500, 189x54) — координаты относительно .panel-container
+   ------------------------------------------------------------------------ */
+
+.panel-footer {
+  position: absolute;
+  left: 398px;
+  top: 500px;
+  width: 189px;
+  height: 54px;
+}
+
+.footer-text {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.5;
+  color: #8DA3B9;
+  text-align: center;
+  width: 100%;
+}
+
+.footer-underline-img {
+  display: block;
+  position: absolute;
+  left: 6px;
+  top: 41px;
+  width: 176.5px;
+  height: 13px;
+}

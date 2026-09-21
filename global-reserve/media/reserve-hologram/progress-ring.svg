@@ -1,0 +1,36 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="331" height="332" viewBox="0 0 331 332" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="progress-ring" clip-path="url(#rh-ring-clip)">
+<path id="rh-ring-arc" d="M165.001 27C195.826 27.0001 225.814 37.0309 250.435 55.5771C275.057 74.1235 292.976 100.178 301.484 129.806C309.992 159.433 308.628 191.025 297.599 219.81C286.568 248.593 266.472 273.008 240.344 289.363C214.215 305.719 183.474 313.129 152.764 310.473L152.763 310.472C122.052 307.814 93.0404 295.237 70.1083 274.639C47.5347 254.362 32.0597 227.396 25.9316 197.703L25.6464 196.287C19.723 166.036 23.804 134.679 37.2734 106.952L44.7021 91.6611L60.9843 99.5707L52.5644 114.381C40.7078 138.788 37.1158 166.391 42.33 193.021C47.5442 219.649 61.282 243.858 81.4687 261.991C101.656 280.124 127.194 291.196 154.228 293.535C181.262 295.873 208.322 289.351 231.323 274.953C254.323 260.556 272.015 239.066 281.725 213.728C291.434 188.389 292.633 160.579 285.144 134.498C277.654 108.417 261.881 85.4822 240.207 69.1562C218.533 52.8303 192.135 44 165 44L148.001 44.9844V27H165.001Z" fill="url(#rh-ring-arc-gradient)"/>
+<g id="rh-ring-disc-group">
+<path d="M165.5 293.5C233.983 293.5 289.5 237.983 289.5 169.5C289.5 101.017 233.983 45.5 165.5 45.5C97.0167 45.5 41.5 101.017 41.5 169.5C41.5 237.983 97.0167 293.5 165.5 293.5Z" fill="#09213E"/>
+<path d="M165.5 293.5C233.983 293.5 289.5 237.983 289.5 169.5C289.5 101.017 233.983 45.5 165.5 45.5C97.0167 45.5 41.5 101.017 41.5 169.5C41.5 237.983 97.0167 293.5 165.5 293.5Z" stroke="#82C0FA"/>
+<path d="M165.5 294C234.259 294 290 238.259 290 169.5C290 100.741 234.259 45 165.5 45C96.7406 45 41 100.741 41 169.5C41 238.259 96.7406 294 165.5 294Z" stroke="#82C0FA"/>
+</g>
+<g id="rh-ring-outer-glow-group" filter="url(#rh-ring-outer-filter)">
+<circle cx="165.5" cy="166" r="162.5" stroke="#82C0FA"/>
+</g>
+</g>
+<defs>
+<filter id="rh-ring-outer-filter" x="0.484" y="0.984" width="330.032" height="330.032" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset/>
+<feGaussianBlur stdDeviation="1.008"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.782036 0 0 0 0 0.893003 0 0 0 0 0.99681 0 0 0 1 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset/>
+<feGaussianBlur stdDeviation="1"/>
+<feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0"/>
+<feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
+</filter>
+<linearGradient id="rh-ring-arc-gradient" x1="281.984" y1="83.4844" x2="66.4843" y2="271.484" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FBE1A9"/>
+<stop offset="1" stop-color="#F3A54C"/>
+</linearGradient>
+<clipPath id="rh-ring-clip">
+<rect width="331" height="332" fill="white"/>
+</clipPath>
+</defs>
+</svg>
